@@ -11,5 +11,5 @@ public interface BankController {
     void signup(SignupRequest request,  DataOutputStream out) throws IOException;
     void signin(SigninRequest request, DataOutputStream out) throws IOException;
     void transferMoney(TransferRequest request, DataOutputStream out) throws IOException;
-    void getBalance(DataOutputStream out) throws IOException;
+    void getBalance(String authToken, DataOutputStream out) throws IOException;
 }

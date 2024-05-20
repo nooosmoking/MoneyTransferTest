@@ -5,7 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -46,54 +49,65 @@ public class Server {
 
     private class ClientThread extends Thread {
         private final Socket clientSocket;
+        private final DataOutputStream out;
+        private final BufferedReader in;
 
-        public ClientThread(Socket clientSocket) {
+        public ClientThread(Socket clientSocket) throws IOException {
             this.clientSocket = clientSocket;
+            this.out = new DataOutputStream(clientSocket.getOutputStream());
+            this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            logger.info("New client connected");
         }
-
         @Override
         public void run() {
             try {
-                DataOutputStream out = new DataOutputStream(clientSocket.getOutputStream());
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream());
-                logger.info("New client connected");
                 while (true) {
-                    parseHeader(out, in);
+                    handleHttpRequest();
                 }
             } catch (IOException | NullPointerException ignored) {
             }
         }
 
-        private void parseHeader(DataOutputStream out, BufferedReader in) throws IOException {
+        private void handleHttpRequest() throws IOException {
+            String[] headers = parseHeader();
+            if (headers != null) {
+                String body = readBody(in);
+                getMethod(headers, body);
+            }
+        }
+
+        private String[] parseHeader() throws IOException {
             String request = in.readLine();
             String[] parts = request.split(" ");
             try {
                 String method = parts[0];
                 String[] uri = parts[1].split("/");
-                if(uri[0].equals(url)){
-                    getMethod(out, in, method, uri[1]);
+                if (uri[0].equals(url)) {
+                    return new String[]{method, uri[1]};
                 }
             } catch (IndexOutOfBoundsException ex) {
                 sendErrorMessage(out);
             }
+            return null;
         }
 
-        private void getMethod(DataOutputStream out, BufferedReader in, String method, String path) throws IOException {
-            String body = parseBody(in);
+        private void getMethod(String[] headers, String body) throws IOException {
+            String method = headers[0];
+            String path = headers[1];
             if (method.equalsIgnoreCase("POST") && path.equals("money")) {
-                bankController.processMoneyTransferRequest(in, out);
+                bankController.transferMoney(body, out);
             } else if (method.equalsIgnoreCase("GET") && path.equals("money")) {
-                bankController.processGetBalanceRequest(in, out);
+                bankController.getBalance(body, out);
             } else if (method.equalsIgnoreCase("POST") && path.equals("signup")) {
-                bankController.processSignupRequest(in, out);
+                bankController.signup(body, out);
             } else if (method.equalsIgnoreCase("POST") && path.equals("signin")) {
-                bankController.processSigninRequest(in, out);
+                bankController.signin(body, out);
             } else {
                 sendErrorMessage(out);
             }
         }
 
-        private String parseBody(BufferedReader in) throws IOException {
+        private String readBody(BufferedReader in) throws IOException {
             StringBuilder bodyBuilder = new StringBuilder();
             int b;
             while ((b = in.read()) != -1) {
