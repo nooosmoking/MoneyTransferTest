@@ -47,4 +47,11 @@ public class BankControllerImpl implements BankController{
     public void getBalance(String authToken, DataOutputStream out) throws IOException {
 
     }
+
+    private void sendResponse(DataOutputStream out, int status, String statusMessage, String body) throws IOException {
+        String response = new String("HTTP/1.1 " + status + " " + statusMessage + "\r\n"+
+                "Content-Length: " + body.length()+"\r\n" +
+                body);
+        out.writeUTF(response);
+    }
 }
