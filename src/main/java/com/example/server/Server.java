@@ -1,6 +1,9 @@
 package com.example.server;
 
 import com.example.controllers.BankController;
+import com.example.models.SigninRequest;
+import com.example.models.SignupRequest;
+import com.example.models.TransferRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -95,13 +98,13 @@ public class Server {
             String method = headers[0];
             String path = headers[1];
             if (method.equalsIgnoreCase("POST") && path.equals("money")) {
-                bankController.transferMoney(body, out);
+                bankController.transferMoney(new TransferRequest(body), out);
             } else if (method.equalsIgnoreCase("GET") && path.equals("money")) {
-                bankController.getBalance(body, out);
+                bankController.getBalance("authToken", out);
             } else if (method.equalsIgnoreCase("POST") && path.equals("signup")) {
-                bankController.signup(body, out);
+                bankController.signup(new SignupRequest(body), out);
             } else if (method.equalsIgnoreCase("POST") && path.equals("signin")) {
-                bankController.signin(body, out);
+                bankController.signin(new SigninRequest(body), out);
             } else {
                 sendErrorMessage(out);
             }
@@ -120,7 +123,6 @@ public class Server {
             out.writeUTF("HTTP/1.1 404 Not Found");
         }
     }
-
 
     public void close() {
 
