@@ -9,8 +9,8 @@ import lombok.Data;
 @Data
 public class TransferRequest {
     private int amount;
-    private int senderId;
-    private int receiverId;
+    private long senderId;
+    private long receiverId;
 
     public TransferRequest(String json) throws JsonProcessingException {
         ObjectMapper mapper =

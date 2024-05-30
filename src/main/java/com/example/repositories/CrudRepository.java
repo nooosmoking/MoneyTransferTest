@@ -1,14 +1,17 @@
 package com.example.repositories;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CrudRepository<T> {
 
     List<T> findAll();
 
-    boolean save(T entity);
+    Optional<T> findById(long id);
+
+    void save(T entity);
 
     void update(T entity);
 
-    void delete(String name);
+    void delete(int id);
 }

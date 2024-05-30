@@ -43,13 +43,13 @@ public class BankControllerImpl implements BankController {
         executorService.execute(() -> {
             try {
                 try {
-                    transferService.transfer(request.getSenderId(), request.getReceiverId(), request.getAmount());
-                    sendResponse(out, 200, "OK", "");
+                    transferService.transfer(request);
+                    sendResponse(out, 200, "OK", "", false);
                 } catch (NotEnoughMoneyException ex) {
-                    sendResponse(out, 400, "Bad Request", "{\"message\": " + ex.getMessage());
+                    sendResponse(out, 400, "Bad Request", "{\"message\": " + ex.getMessage()+"}", true);
                 }
             }catch (IOException ex){
-                
+                System.err.println("Error while sending http response.");
             }
                 }
         );
@@ -61,10 +61,16 @@ public class BankControllerImpl implements BankController {
 
     }
 
-    private void sendResponse(DataOutputStream out, int status, String statusMessage, String body) throws IOException {
-        String response = new String("HTTP/1.1 " + status + " " + statusMessage + "\r\n" +
-                "Content-Length: " + body.length() + "\r\n" +
-                body);
-        out.writeUTF(response);
+    private void sendResponse(DataOutputStream out, int status, String statusMessage, String body, boolean includeContentType) throws IOException {
+        StringBuilder response = new StringBuilder("HTTP/1.1 " + status + " " + statusMessage + "\r\n");
+
+        if (includeContentType) {
+            response.append("Content-Type: application/json\r\n");
+        }
+
+        response.append("Content-Length: ").append(body.length()).append("\r\n\r\n");
+        response.append(body);
+
+        out.writeUTF(response.toString());
     }
 }
