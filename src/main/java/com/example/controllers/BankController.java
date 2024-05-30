@@ -8,8 +8,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 public interface BankController {
-    void signup(SignupRequest request,  DataOutputStream out) throws IOException;
-    void signin(SigninRequest request, DataOutputStream out) throws IOException;
-    void transferMoney(TransferRequest request, DataOutputStream out) throws IOException;
-    void getBalance(String authToken, DataOutputStream out) throws IOException;
+    void signup(SignupRequest request,  DataOutputStream out) ;
+    void signin(SigninRequest request, DataOutputStream out) ;
+    void transferMoney(TransferRequest request, DataOutputStream out) ;
+    void getBalance(String authToken, DataOutputStream out) ;
 }

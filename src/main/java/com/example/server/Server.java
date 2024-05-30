@@ -1,6 +1,7 @@
 package com.example.server;
 
 import com.example.controllers.BankController;
+import com.example.exceptions.InvalidRequestHeaderException;
 import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
 import com.example.models.TransferRequest;
@@ -61,25 +62,28 @@ public class Server {
             this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             logger.info("New client connected");
         }
+
         @Override
         public void run() {
-            try {
-                while (true) {
-                    handleHttpRequest();
-                }
-            } catch (IOException | NullPointerException ignored) {
+            while (true) {
+                handleHttpRequest();
             }
+
         }
 
-        private void handleHttpRequest() throws IOException {
-            String[] headers = parseHeader();
-            if (headers != null) {
+        private void handleHttpRequest() {
+            try {
+                String[] headers = parseHeader();
                 String body = readBody(in);
                 getMethod(headers, body);
+            } catch (IOException ex) {
+                System.err.println("Error while handling http request.");
+            } catch (InvalidRequestHeaderException ex) {
+                System.err.println(ex.getMessage());
             }
         }
 
-        private String[] parseHeader() throws IOException {
+        private String[] parseHeader() throws IOException, InvalidRequestHeaderException {
             String request = in.readLine();
             String[] parts = request.split(" ");
             try {
@@ -87,11 +91,13 @@ public class Server {
                 String[] uri = parts[1].split("/");
                 if (uri[0].equals(url)) {
                     return new String[]{method, uri[1]};
+                } else {
+                    throw new InvalidRequestHeaderException("Unknown request URL.");
                 }
-            } catch (IndexOutOfBoundsException ex) {
+            } catch (IndexOutOfBoundsException | NullPointerException ex) {
                 sendErrorMessage(out);
+                throw new InvalidRequestHeaderException("Invalid http request headers.");
             }
-            return null;
         }
 
         private void getMethod(String[] headers, String body) throws IOException {

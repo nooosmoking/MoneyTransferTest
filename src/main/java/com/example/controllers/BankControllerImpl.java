@@ -29,17 +29,17 @@ public class BankControllerImpl implements BankController {
     }
 
     @Override
-    public void signup(SignupRequest request, DataOutputStream out) throws IOException {
+    public void signup(SignupRequest request, DataOutputStream out)  {
 
     }
 
     @Override
-    public void signin(SigninRequest request, DataOutputStream out) throws IOException {
+    public void signin(SigninRequest request, DataOutputStream out){
 
     }
 
     @Override
-    public void transferMoney(TransferRequest request, DataOutputStream out) throws IOException {
+    public void transferMoney(TransferRequest request, DataOutputStream out)  {
         executorService.execute(() -> {
             try {
                 try {
@@ -57,7 +57,7 @@ public class BankControllerImpl implements BankController {
     }
 
     @Override
-    public void getBalance(String authToken, DataOutputStream out) throws IOException {
+    public void getBalance(String authToken, DataOutputStream out)  {
 
     }
 
