@@ -1,5 +1,6 @@
 package com.example.repositories;
 
+import com.example.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.RowMapper;
@@ -12,17 +13,17 @@ import javax.sql.DataSource;
 import java.util.List;
 import java.util.Optional;
 
-//@Repository("usersRepository")
-//public class UsersRepositoryImpl implements UsersRepository {
-//    private final DataSource dataSource;
+@Repository("usersRepository")
+public class UsersRepositoryImpl implements UsersRepository {
+    private final DataSource dataSource;
+
+    @Autowired
+    public UsersRepositoryImpl(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 //
-//    @Autowired
-//    public UsersRepositoryImpl(DataSource dataSource) {
-//        this.dataSource = dataSource;
-//    }
-//
-//    @Override
-//    public List<User> findAll() {
+    @Override
+    public List<User> findAll() {
 //        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
 //        String query = "SELECT * FROM users";
 //        RowMapper<User> userRowMapper = (r, i) -> {
@@ -35,10 +36,20 @@ import java.util.Optional;
 //            return rowUser;
 //        };
 //        return jdbcTemplate.query(query, userRowMapper);
-//    }
-//
-//    @Override
-//    public boolean save(User entity) {
+        return null;
+    }
+
+    @Override
+    public Optional<User> findById(long id) {
+        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        String query = "SELECT * FROM users WHERE id = :id";
+        List<User> user = jdbcTemplate.query(query, new MapSqlParameterSource().addValue("id", id), new BeanPropertyRowMapper<>(User.class));
+        return user.stream().findFirst();
+    }
+
+    //
+    @Override
+    public void save(User entity) {
 //        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
 //        if(findByLogin(entity.getLogin()).isPresent()){
 //            return false;
@@ -48,23 +59,30 @@ import java.util.Optional;
 //                .addValue("login", entity.getLogin())
 //                .addValue("password", entity.getPassword()));
 //        return true;
-//    }
+    }
 //
-//    @Override
-//    public void update(User entity) {
+    @Override
+    public void update(User entity) {
 //        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
 //        String query = "UPDATE users SET login = :login, password = :password WHERE id = :id;";
 //        jdbcTemplate.update(query, new BeanPropertySqlParameterSource(entity));
-//    }
-//
-//
-//    @Override
-//    public void delete(String name) {
+    }
+
+
+    @Override
+    public void delete(User entity) {
 //        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
 //        String query = "DELETE FROM users WHERE login = :login;";
 //        jdbcTemplate.update(query, new MapSqlParameterSource().addValue("login", name));
-//    }
-//
+    }
+
+    @Override
+    public void updateBalance(User entity) {
+        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        String query = "UPDATE users SET balance = :balance WHERE id = :id;";
+        jdbcTemplate.update(query, new MapSqlParameterSource().addValue("balance", entity.getBalance()).addValue("id", entity.getId()));
+    }
+
 //    @Override
 //    public Optional<User> findByLogin(String login) {
 //        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
@@ -72,4 +90,4 @@ import java.util.Optional;
 //        List<User> user = jdbcTemplate.query(query, new MapSqlParameterSource().addValue("login", login), new BeanPropertyRowMapper<>(User.class));
 //        return user.stream().findFirst();
 //    }
-//}
+}

@@ -10,13 +10,13 @@ import java.time.LocalDateTime;
 public class Transfer {
     private long id;
     private double amount;
-    private long senderId;
-    private long receiverId;
+    private User sender;
+    private User receiver;
     private LocalDateTime localDateTime;
 
-    public Transfer(double amount, long senderId, long receiverId) {
+    public Transfer(double amount, User sender, User receiver) {
         this.amount = amount;
-        this.senderId = senderId;
-        this.receiverId = receiverId;
+        this.sender = sender;
+        this.receiver = receiver;
     }
 }

@@ -89,7 +89,7 @@ public class Server {
             try {
                 String method = parts[0];
                 String[] uri = parts[1].split("/");
-                if (uri[0].equals(url)) {
+                if (uri[0].equals(url) ||uri[0].isEmpty() ) {
                     return new String[]{method, uri[1]};
                 } else {
                     throw new InvalidRequestHeaderException("Unknown request URL.");

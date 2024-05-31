@@ -6,6 +6,6 @@ import lombok.Data;
 public class User {
     private long id;
     private String username;
-    private String hashedPassword;
+    private String password;
     private double balance;
 }

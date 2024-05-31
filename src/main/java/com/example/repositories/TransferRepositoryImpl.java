@@ -44,22 +44,22 @@ public class TransferRepositoryImpl implements TransferRepository {
         return Optional.empty();
     }
 
-    private LocalDateTime convertToLocalDateTime(Timestamp timestamp) {
-        ZoneId gmtZone = ZoneId.of("GMT");
-        ZoneId localZone = ZoneId.systemDefault();
-
-        return timestamp.toLocalDateTime().atZone(gmtZone).withZoneSameInstant(localZone).toLocalDateTime();
-    }
+//    private LocalDateTime convertToLocalDateTime(Timestamp timestamp) {
+//        ZoneId gmtZone = ZoneId.of("GMT");
+//        ZoneId localZone = ZoneId.systemDefault();
+//
+//        return timestamp.toLocalDateTime().atZone(gmtZone).withZoneSameInstant(localZone).toLocalDateTime();
+//    }
 
 
     @Override
     public void save(Transfer entity) {
-//        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-//        String query = "INSERT INTO messages (text, sender, room) VALUES (:text, :sender, :room);";
-//        jdbcTemplate.update(query, new MapSqlParameterSource()
-//                .addValue("text", entity.getText())
-//                .addValue("sender", entity.getSender().getLogin())
-//                .addValue("room", entity.getRoom().getName()));
+        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        String query = "INSERT INTO transfers (amount, sender_id, receiver_id) VALUES (:amount, :sender_id, :receiver_id);";
+        jdbcTemplate.update(query, new MapSqlParameterSource()
+                .addValue("amount", entity.getAmount())
+                .addValue("sender_id", entity.getSender().getId())
+                .addValue("receiver_id", entity.getReceiver().getId()));
     }
 
     @Override
@@ -68,29 +68,7 @@ public class TransferRepositoryImpl implements TransferRepository {
     }
 
     @Override
-    public void delete(int id) {
+    public void delete(Transfer entity) {
 
     }
-
-//    @Override
-//    public List<Message> findLastCountMessages(int count, String roomName) {
-//        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-//        String query = "SELECT  m.text, m.date_time, m.room, u.login FROM messages m " +
-//                "LEFT JOIN users u ON m.sender = u.login "+
-//                "WHERE room = :room "+
-//                "ORDER BY m.date_time "+
-//                "LIMIT :count";
-//        RowMapper<Message> messageRowMapper = (r, i) -> {
-//            Message rowMessage = new Message();
-//            rowMessage.setSender(new User( r.getString("login"), null, null, null, false));
-//            rowMessage.setText(r.getString("text"));
-//            rowMessage.setTime(convertToLocalDateTime(r.getTimestamp("date_time")));
-//            rowMessage.setRoom(new Chatroom(r.getString("room"), null));
-//            return rowMessage;
-//        };
-//        return jdbcTemplate.query(query, new MapSqlParameterSource()
-//                .addValue("count", count)
-//                .addValue("room", roomName)
-//                ,messageRowMapper);
-//    }
 }

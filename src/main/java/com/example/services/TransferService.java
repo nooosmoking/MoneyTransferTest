@@ -32,7 +32,7 @@ public class TransferService {
         User receiver = receiverOptional.get();
         receiver.setBalance(receiver.getBalance()+request.getAmount());
 
-        Transfer transfer = new Transfer(request.getAmount(), request.getSenderId(), request.getReceiverId());
+        Transfer transfer = new Transfer(request.getAmount(), sender, receiver);
         transferRepository.save(transfer);
 
         usersRepository.updateBalance(sender);
