@@ -8,7 +8,7 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 public class TransferRequest {
-    private int amount;
+    private double amount;
     private long senderId;
     private long receiverId;
 

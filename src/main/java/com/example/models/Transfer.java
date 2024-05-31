@@ -9,12 +9,12 @@ import java.time.LocalDateTime;
 @Data
 public class Transfer {
     private long id;
-    private int amount;
+    private double amount;
     private long senderId;
     private long receiverId;
     private LocalDateTime localDateTime;
 
-    public Transfer(int amount, long senderId, long receiverId) {
+    public Transfer(double amount, long senderId, long receiverId) {
         this.amount = amount;
         this.senderId = senderId;
         this.receiverId = receiverId;

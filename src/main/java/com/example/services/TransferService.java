@@ -25,11 +25,18 @@ public class TransferService {
         Optional<User> senderOptional = usersRepository.findById(request.getSenderId());
         Optional<User> receiverOptional = usersRepository.findById(request.getReceiverId());
 
+        validateTransfer(senderOptional, receiverOptional, request);
+
+        User sender = senderOptional.get();
+        sender.setBalance(sender.getBalance()-request.getAmount());
+        User receiver = receiverOptional.get();
+        receiver.setBalance(receiver.getBalance()+request.getAmount());
+
         Transfer transfer = new Transfer(request.getAmount(), request.getSenderId(), request.getReceiverId());
         transferRepository.save(transfer);
-        User sender = senderOptional.get();
-        User receiver
-        usersRepository.updateBalance(sender.getId(), sender.getBalance() - );
+
+        usersRepository.updateBalance(sender);
+        usersRepository.updateBalance(receiver);
     }
 
     private void validateTransfer(Optional<User> senderOptional, Optional<User> receiverOptional, TransferRequest request) throws NotEnoughMoneyException, NoSuchUserException {
