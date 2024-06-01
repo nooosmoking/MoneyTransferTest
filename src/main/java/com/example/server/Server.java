@@ -78,8 +78,10 @@ public class Server {
                 getMethod(headers, body);
             } catch (IOException ex) {
                 System.err.println("Error while handling http request.");
+                ex.printStackTrace();
             } catch (InvalidRequestHeaderException ex) {
                 System.err.println(ex.getMessage());
+            } catch (NullPointerException ignored){
             }
         }
 
@@ -126,7 +128,7 @@ public class Server {
         }
 
         private void sendErrorMessage(DataOutputStream out) throws IOException {
-            out.writeUTF("HTTP/1.1 404 Not Found");
+            out.writeUTF("404 Not Found");
         }
     }
 
