@@ -8,10 +8,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="SocketServer" />
+        <module name="MoneyTransfer" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="Rest" target="17" />
+      <module name="SocketServer" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">

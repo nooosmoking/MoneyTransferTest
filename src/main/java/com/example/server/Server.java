@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.http.HttpResponse;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 @Component
@@ -54,7 +57,7 @@ public class Server {
     private class ClientThread {
         private final DataOutputStream out;
         private final BufferedReader in;
-
+        private Map<String, String> headers;
         public ClientThread(Socket clientSocket) throws IOException {
             this.out = new DataOutputStream(clientSocket.getOutputStream());
             this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -69,13 +72,13 @@ public class Server {
 
         private void handleHttpRequest() {
             try {
+                parseStartLine();
+                parseHeader();
                 String body = readBody();
-                String[] headers = parseHeader();
-
                 if (body.isEmpty()) {
                     sendErrorMessage();
                 } else {
-                    getMethod(headers, body);
+                    implementMethod(headers, body);
                 }
             } catch (IOException ex) {
                 System.err.println("Error while handling http request.");
@@ -86,26 +89,29 @@ public class Server {
             }
         }
 
-        private String[] parseHeader() throws IOException, InvalidRequestHeaderException {
+        private void parseStartLine() throws IOException, InvalidRequestHeaderException {
+            headers = new HashMap<>();
             String request = in.readLine();
             String[] parts = request.split(" ");
             try {
-                String method = parts[0];
+                headers.put("method", parts[0]);
                 String[] uri = parts[1].split("/");
                 if (uri[0].equals(url) || uri[0].isEmpty()) {
-                    return new String[]{method, uri[1]};
+                    headers.put("path", uri[1]);
                 } else {
                     throw new InvalidRequestHeaderException("Unknown request URL.");
                 }
             } catch (IndexOutOfBoundsException | NullPointerException ex) {
                 sendErrorMessage();
-                throw new InvalidRequestHeaderException("Invalid http request headers.");
+                throw new InvalidRequestHeaderException("Invalid http request start line.");
             }
         }
 
-        private void getMethod(String[] headers, String body) throws IOException {
-            String method = headers[0];
-            String path = headers[1];
+        private void parseHeader(){
+
+        }
+
+        private void implementMethod(String body) throws IOException {
             if (method.equalsIgnoreCase("POST") && path.equals("money")) {
                 bankController.transferMoney(new TransferRequest(body), out);
             } else if (method.equalsIgnoreCase("GET") && path.equals("money")) {
