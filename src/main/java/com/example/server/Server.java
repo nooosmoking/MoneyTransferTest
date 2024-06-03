@@ -11,10 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -35,20 +32,19 @@ public class Server {
 
     public void setAddress(String[] address) {
         int port = Integer.parseInt(address[1]);
-        try (this.server = new ServerSocket(port)) {
+        try (ServerSocket server = new ServerSocket(port)) {
+            this.server = server;
             this.url = address[0];
         } catch (IOException e) {
             logger.error("Error while starting server.");
-            System.exit(-1);
         }
     }
 
     public void run() {
         System.out.println("Starting server. For exiting write \"stop\"");
         while (true) {
-            try {
-                Socket client = server.accept();
-                new ClientThread(client).run();
+            try (Socket client = server.accept(); DataOutputStream out = new DataOutputStream(client.getOutputStream()); BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()))){
+                new ClientThread(out, in).run();
             } catch (IOException e) {
                 logger.error("Error while connecting client");
             }
@@ -61,9 +57,9 @@ public class Server {
         private Map<String, String> headers;
         private String body;
 
-        public ClientThread(Socket clientSocket) throws IOException {
-            this.out = new DataOutputStream(clientSocket.getOutputStream());
-            this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        public ClientThread(DataOutputStream out, BufferedReader in) throws IOException {
+            this.out = out;
+            this.in =  in;
             logger.info("New client connected");
         }
 
