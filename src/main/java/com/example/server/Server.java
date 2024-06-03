@@ -32,8 +32,8 @@ public class Server {
 
     public void setAddress(String[] address) {
         int port = Integer.parseInt(address[1]);
-        try (ServerSocket server = new ServerSocket(port)) {
-            this.server = server;
+        try {
+            this.server = new ServerSocket(port);
             this.url = address[0];
         } catch (IOException e) {
             logger.error("Error while starting server.");
@@ -88,7 +88,8 @@ public class Server {
                 }
             } catch (IOException ex) {
                 System.err.println("Error while handling http request.");
-            }
+            } catch (NullPointerException ignored){}
+
         }
 
         private void parseStartLine() throws IOException, InvalidRequestException {
@@ -149,11 +150,11 @@ public class Server {
             }
         }
 
-        private String readBody() throws IOException {
+        private String readBody() throws IOException{
             StringBuilder bodyBuilder = new StringBuilder();
-            int b;
-            while ((b = in.read()) != -1) {
-                bodyBuilder.append((char) b);
+            int length = Integer.parseInt(headers.get("Content-Length"));
+            for (int i = 0; i < length; i++) {
+                bodyBuilder.append((char)in.read());
             }
             return bodyBuilder.toString();
         }
