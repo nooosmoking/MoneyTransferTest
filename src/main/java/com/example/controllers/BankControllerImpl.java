@@ -29,35 +29,34 @@ public class BankControllerImpl implements BankController {
     }
 
     @Override
-    public void signup(SignupRequest request, DataOutputStream out)  {
+    public void signup(SignupRequest request, DataOutputStream out) {
 
     }
 
     @Override
-    public void signin(SigninRequest request, DataOutputStream out){
+    public void signin(SigninRequest request, DataOutputStream out) {
 
     }
 
     @Override
-    public void transferMoney(TransferRequest request, DataOutputStream out)  {
+    public void transferMoney(TransferRequest request, DataOutputStream out) {
         executorService.execute(() -> {
-            try {
-                try {
-                    transferService.transfer(request);
-                    sendResponse(out, 200, "OK", "", false);
-                } catch (NotEnoughMoneyException ex) {
-                    sendResponse(out, 400, "Bad Request", "{\"message\": " + ex.getMessage()+"}", true);
-                }
-            }catch (IOException ex){
-                System.err.println("Error while sending http response.");
-            }
+                    try {
+                        try {
+                            transferService.transfer(request);
+                            sendResponse(out, 200, "OK", "", false);
+                        } catch (NotEnoughMoneyException ex) {
+                            sendResponse(out, 400, "Bad Request", "{\"message\": " + ex.getMessage() + "}", true);
+                        }
+                    } catch (IOException ex) {
+                        System.err.println("Error while sending http response.");
+                    }
                 }
         );
-
     }
 
     @Override
-    public void getBalance(String authToken, DataOutputStream out)  {
+    public void getBalance(String authToken, DataOutputStream out) {
 
     }
 
@@ -66,11 +65,12 @@ public class BankControllerImpl implements BankController {
 
         if (includeContentType) {
             response.append("Content-Type: application/json\r\n");
+            response.append("Content-Length: ").append(body.length()).append("\r\n");
+
+            response.append("\r\n");
+            response.append(body).append("\r\n");
         }
 
-        response.append("Content-Length: ").append(body.length()).append("\r\n\r\n");
-        response.append(body);
-
-        out.writeUTF(response.toString());
+        out.write(response.toString().getBytes());
     }
 }

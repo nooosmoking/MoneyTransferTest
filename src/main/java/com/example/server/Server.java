@@ -11,7 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -43,7 +46,7 @@ public class Server {
     public void run() {
         System.out.println("Starting server. For exiting write \"stop\"");
         while (true) {
-            try (Socket client = server.accept(); DataOutputStream out = new DataOutputStream(client.getOutputStream()); BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()))){
+            try (Socket client = server.accept(); DataOutputStream out = new DataOutputStream(client.getOutputStream()); BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()))) {
                 new ClientThread(out, in).run();
             } catch (IOException e) {
                 logger.error("Error while connecting client");
@@ -59,7 +62,7 @@ public class Server {
 
         public ClientThread(DataOutputStream out, BufferedReader in) throws IOException {
             this.out = out;
-            this.in =  in;
+            this.in = in;
             logger.info("New client connected");
         }
 
@@ -79,16 +82,17 @@ public class Server {
                 } catch (InvalidRequestException ex) {
                     System.err.println(ex.getMessage());
                     sendErrorResponse(400, "Bad Request", "{\"message\": \"" + ex.getMessage() + "\"}");
-                } catch (ResourceNotFoundException ex){
+                } catch (ResourceNotFoundException ex) {
                     System.err.println(ex.getMessage());
                     sendErrorResponse(404, "Not Found", "{\"message\": \"" + ex.getMessage() + "\"}");
-                } catch (MethodNotAllowedException ex){
+                } catch (MethodNotAllowedException ex) {
                     System.err.println(ex.getMessage());
                     sendErrorResponse(405, "Method Not Allowed ", "{\"message\": \"" + ex.getMessage() + "\"}");
                 }
             } catch (IOException ex) {
                 System.err.println("Error while handling http request.");
-            } catch (NullPointerException ignored){}
+            } catch (NullPointerException ignored) {
+            }
 
         }
 
@@ -126,14 +130,14 @@ public class Server {
         private void implementMethod() throws IOException, InvalidRequestException, ResourceNotFoundException, MethodNotAllowedException {
             String method = headers.get("method");
             String path = headers.get("path");
-            if (method.equalsIgnoreCase("GET") ) {
-                if(path.equals("money")) {
+            if (method.equalsIgnoreCase("GET")) {
+                if (path.equals("money")) {
                     bankController.getBalance("authToken", out);
                 } else {
-                    throw new ResourceNotFoundException("Resource not found \""+path+"\"");
+                    throw new ResourceNotFoundException("Resource not found \"" + path + "\"");
                 }
-            } else if ( method.equalsIgnoreCase("POST")){
-                if(!body.isEmpty()) {
+            } else if (method.equalsIgnoreCase("POST")) {
+                if (!body.isEmpty()) {
                     if (path.equals("money")) {
                         bankController.transferMoney(new TransferRequest(body), out);
                     } else if (path.equals("signup")) {
@@ -141,7 +145,8 @@ public class Server {
                     } else if (path.equals("signin")) {
                         bankController.signin(new SigninRequest(body), out);
                     } else {
-                        throw new ResourceNotFoundException("Resource not found \""+path+"\"");                    }
+                        throw new ResourceNotFoundException("Resource not found \"" + path + "\"");
+                    }
                 } else {
                     throw new InvalidRequestException("Body is empty");
                 }
@@ -150,22 +155,28 @@ public class Server {
             }
         }
 
-        private String readBody() throws IOException{
+        private String readBody() throws IOException {
             StringBuilder bodyBuilder = new StringBuilder();
             int length = Integer.parseInt(headers.get("Content-Length"));
             for (int i = 0; i < length; i++) {
-                bodyBuilder.append((char)in.read());
+                bodyBuilder.append((char) in.read());
             }
             return bodyBuilder.toString();
         }
 
         private void sendErrorResponse(int status, String statusMessage, String body
-                                  ) throws IOException {
-            String response = "HTTP/1.1 " + status + " " + statusMessage + "\r\n" + "Content-Type: application/json\r\n" +
-                    "Content-Length: " + body.length() + "\r\n\r\n" +
-                    body;
+        ) throws IOException {
+            StringBuilder response = new StringBuilder("HTTP/1.1 " + status + " " + statusMessage + "\r\n");
 
-            out.writeUTF(response);
+
+            response.append("Content-Type: application/json\r\n");
+            response.append("Content-Length: ").append(body.length()).append("\r\n");
+
+            response.append("\r\n");
+            response.append(body).append("\r\n");
+
+            out.write(response.toString().getBytes());
+
         }
     }
 
