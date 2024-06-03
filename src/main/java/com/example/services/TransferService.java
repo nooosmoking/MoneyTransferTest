@@ -8,10 +8,12 @@ import com.example.models.User;
 import com.example.repositories.TransferRepository;
 import com.example.repositories.UsersRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Service
+@Transactional
 public class TransferService {
     private UsersRepository usersRepository;
     private TransferRepository transferRepository;
@@ -21,7 +23,10 @@ public class TransferService {
         this.transferRepository = transferRepository;
     }
 
-    public void transfer(TransferRequest request) throws NoSuchUserException, NotEnoughMoneyException {
+    public synchronized void transfer(TransferRequest request) throws NoSuchUserException, NotEnoughMoneyException, IllegalArgumentException {
+        if (request.getReceiverId() == request.getSenderId()){
+            throw new IllegalArgumentException("Forbidden to send money to yourself.");
+        }
         Optional<User> senderOptional = usersRepository.findById(request.getSenderId());
         Optional<User> receiverOptional = usersRepository.findById(request.getReceiverId());
 
@@ -40,9 +45,9 @@ public class TransferService {
     }
 
     private void validateTransfer(Optional<User> senderOptional, Optional<User> receiverOptional, TransferRequest request) throws NotEnoughMoneyException, NoSuchUserException {
-        if (!senderOptional.isPresent()){
+        if (senderOptional.isEmpty()){
             throw new NoSuchUserException("There is no user with id "+request.getSenderId());
-        } else if (!receiverOptional.isPresent()){
+        } else if (receiverOptional.isEmpty()){
             throw new NoSuchUserException("There is no user with id "+request.getReceiverId());
         }
         User sender = senderOptional.get();

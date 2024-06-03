@@ -7,6 +7,7 @@ import com.example.exceptions.ResourceNotFoundException;
 import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
 import com.example.models.TransferRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -47,14 +48,12 @@ public class Server {
         System.out.println("Starting server. For exiting write \"stop\"");
         while (true) {
             System.out.println("aaaaa");
-            try (Socket clientSocket = server.accept()) {
+            try {
+                Socket clientSocket = server.accept();
                 new ClientThread(clientSocket).start();
-                Thread.sleep(1000);
                 System.out.println("bbbb");
             } catch (IOException e) {
                 logger.error("Error while connecting client");
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
             }
         }
     }
@@ -129,7 +128,7 @@ public class Server {
                     headers.put(parts[0], parts[1]);
                     String[] uri = parts[1].split("/");
                 } catch (IndexOutOfBoundsException | NullPointerException ex) {
-                    throw new InvalidRequestException("Invalid http request start line.");
+                    throw new InvalidRequestException("Invalid http header line.");
                 }
             }
         }
@@ -137,32 +136,55 @@ public class Server {
         private void implementMethod() throws IOException, InvalidRequestException, ResourceNotFoundException, MethodNotAllowedException {
             String method = headers.get("method");
             String path = headers.get("path");
-            if (method.equalsIgnoreCase("GET")) {
-                if (path.equals("money")) {
-                    bankController.getBalance("authToken", out);
-                } else {
-                    throw new ResourceNotFoundException("Resource not found \"" + path + "\"");
-                }
-            } else if (method.equalsIgnoreCase("POST")) {
-                if (!body.isEmpty()) {
-                    if (path.equals("money")) {
-                        bankController.transferMoney(new TransferRequest(body), out);
-                    } else if (path.equals("signup")) {
-                        bankController.signup(new SignupRequest(body), out);
-                    } else if (path.equals("signin")) {
-                        bankController.signin(new SigninRequest(body), out);
-                    } else {
-                        throw new ResourceNotFoundException("Resource not found \"" + path + "\"");
-                    }
-                } else {
-                    throw new InvalidRequestException("Body is empty");
-                }
-            } else {
-                throw new MethodNotAllowedException("Method " + method + " not allowed");
+
+            switch (method.toUpperCase()) {
+                case "GET":
+                    handleGetRequest(path);
+                    break;
+                case "POST":
+                    handlePostRequest(path, body);
+                    break;
+                default:
+                    throw new MethodNotAllowedException("Method " + method + " not allowed.");
             }
         }
 
+        private void handleGetRequest(String path) throws ResourceNotFoundException {
+            if (!path.equals("money")) {
+                throw new ResourceNotFoundException("Resource not found \"" + path + "\"");
+            }
+            bankController.getBalance("authToken", out);
+        }
+
+        private void handlePostRequest(String path, String body) throws InvalidRequestException, ResourceNotFoundException {
+            if (body.isEmpty()) {
+                throw new InvalidRequestException("Body is empty");
+            }
+            try {
+                switch (path) {
+                    case "money":
+                        bankController.transferMoney(new TransferRequest(body), out);
+                        break;
+                    case "signup":
+                        bankController.signup(new SignupRequest(body), out);
+                        break;
+                    case "signin":
+                        bankController.signin(new SigninRequest(body), out);
+                        break;
+                    default:
+                        throw new ResourceNotFoundException("Resource not found \"" + path + "\"");
+                }
+            } catch (JsonProcessingException ex) {
+                throw new InvalidRequestException("Error while serialization body");
+            }
+
+        }
+
         private String readBody() throws IOException {
+            String lengthString;
+            if ((lengthString = headers.get("Content-Length")) == null) {
+                return null;
+            }
             StringBuilder bodyBuilder = new StringBuilder();
             int length = Integer.parseInt(headers.get("Content-Length"));
             for (int i = 0; i < length; i++) {
@@ -171,19 +193,11 @@ public class Server {
             return bodyBuilder.toString();
         }
 
-        private void sendErrorResponse(int status, String statusMessage, String body
-        ) throws IOException {
-            StringBuilder response = new StringBuilder("HTTP/1.1 " + status + " " + statusMessage + "\r\n");
+        private void sendErrorResponse(int status, String statusMessage, String body) throws IOException {
+            String response = "HTTP/1.1 " + status + " " + statusMessage + "\r\nContent-Type: application/json\r\nContent-Length: "
+                    + body.length() + "\r\n\r\n" + body;
 
-
-            response.append("Content-Type: application/json\r\n");
-            response.append("Content-Length: ").append(body.length()).append("\r\n");
-
-            response.append("\r\n");
-            response.append(body).append("\r\n");
-
-            out.write(response.toString().getBytes());
-
+            out.write(response.getBytes());
         }
     }
 

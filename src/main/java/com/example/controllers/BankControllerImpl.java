@@ -20,6 +20,7 @@ public class BankControllerImpl implements BankController {
     private final AuthService authService;
     private final TransferService transferService;
     private final BalanceService balanceService;
+    private volatile boolean isTransferComplete = true;
 
     public BankControllerImpl(AuthService authService, TransferService transferService, BalanceService balanceService) {
         this.authService = authService;
@@ -40,24 +41,25 @@ public class BankControllerImpl implements BankController {
 
     @Override
     public void transferMoney(TransferRequest request, DataOutputStream out) {
-        executorService.execute(() -> {
-                    try {
-                        try {
-                            transferService.transfer(request);
-                            sendResponse(out, 200, "OK", "", false);
-                        } catch (NotEnoughMoneyException ex) {
-                            sendResponse(out, 400, "Bad Request", "{\"message\": " + ex.getMessage() + "}", true);
-                        }
-                    } catch (IOException ex) {
-                        System.err.println("Error while sending http response.");
-                    }
-                }
-        );
+        isTransferComplete = false;
+        try {
+            try {
+                transferService.transfer(request);
+                sendResponse(out, 200, "OK", "", false);
+            } catch (NotEnoughMoneyException | IllegalArgumentException ex) {
+                sendResponse(out, 400, "Bad Request", "{\"message\": " + ex.getMessage() + "}", true);
+            }
+        } catch (IOException ex) {
+            System.err.println("Error while sending http response.");
+        }
+             isTransferComplete = true;
     }
 
     @Override
     public void getBalance(String authToken, DataOutputStream out) {
-
+        while (!isTransferComplete) {
+            Thread.onSpinWait();
+        }
     }
 
     private void sendResponse(DataOutputStream out, int status, String statusMessage, String body, boolean includeContentType) throws IOException {
