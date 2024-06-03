@@ -68,7 +68,7 @@ public class BankControllerImpl implements BankController {
             response.append("Content-Length: ").append(body.length()).append("\r\n");
 
             response.append("\r\n");
-            response.append(body).append("\r\n");
+            response.append(body);
         }
 
         out.write(response.toString().getBytes());

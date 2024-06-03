@@ -46,30 +46,35 @@ public class Server {
     public void run() {
         System.out.println("Starting server. For exiting write \"stop\"");
         while (true) {
-            try (Socket client = server.accept(); DataOutputStream out = new DataOutputStream(client.getOutputStream()); BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()))) {
-                new ClientThread(out, in).run();
+            System.out.println("aaaaa");
+            try (Socket clientSocket = server.accept()) {
+                new ClientThread(clientSocket).start();
+                Thread.sleep(1000);
+                System.out.println("bbbb");
             } catch (IOException e) {
                 logger.error("Error while connecting client");
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
         }
     }
 
-    private class ClientThread {
+    private class ClientThread extends Thread {
         private final DataOutputStream out;
         private final BufferedReader in;
         private Map<String, String> headers;
         private String body;
 
-        public ClientThread(DataOutputStream out, BufferedReader in) throws IOException {
-            this.out = out;
-            this.in = in;
+        public ClientThread(Socket clientSocket) throws IOException {
+            System.out.println("New client");
+            this.out = new DataOutputStream(clientSocket.getOutputStream());
+            this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             logger.info("New client connected");
         }
 
         public void run() {
-            while (true) {
-                handleHttpRequest();
-            }
+            System.out.println("Client started");
+            handleHttpRequest();
         }
 
         private void handleHttpRequest() {
@@ -90,7 +95,9 @@ public class Server {
                     sendErrorResponse(405, "Method Not Allowed ", "{\"message\": \"" + ex.getMessage() + "\"}");
                 }
             } catch (IOException ex) {
+                ex.printStackTrace();
                 System.err.println("Error while handling http request.");
+                System.exit(-1);
             } catch (NullPointerException ignored) {
             }
 
