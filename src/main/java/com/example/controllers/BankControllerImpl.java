@@ -1,12 +1,13 @@
 package com.example.controllers;
 
+import com.example.exceptions.NoSuchUserException;
 import com.example.exceptions.NotEnoughMoneyException;
 import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
 import com.example.models.TransferRequest;
-import com.example.services.AuthService;
-import com.example.services.BalanceService;
-import com.example.services.TransferService;
+import com.example.services.AuthServiceImpl;
+import com.example.services.BalanceServiceImpl;
+import com.example.services.TransferServiceImpl;
 import org.springframework.stereotype.Controller;
 
 import java.io.DataOutputStream;
@@ -17,12 +18,12 @@ import java.util.concurrent.Executors;
 @Controller
 public class BankControllerImpl implements BankController {
     private final ExecutorService executorService;
-    private final AuthService authService;
-    private final TransferService transferService;
-    private final BalanceService balanceService;
+    private final AuthServiceImpl authService;
+    private final TransferServiceImpl transferService;
+    private final BalanceServiceImpl balanceService;
     private volatile boolean isTransferComplete = true;
 
-    public BankControllerImpl(AuthService authService, TransferService transferService, BalanceService balanceService) {
+    public BankControllerImpl(AuthServiceImpl authService, TransferServiceImpl transferService, BalanceServiceImpl balanceService) {
         this.authService = authService;
         this.transferService = transferService;
         this.balanceService = balanceService;
@@ -46,8 +47,8 @@ public class BankControllerImpl implements BankController {
             try {
                 transferService.transfer(request);
                 sendResponse(out, 200, "OK", "", false);
-            } catch (NotEnoughMoneyException | IllegalArgumentException ex) {
-                sendResponse(out, 400, "Bad Request", "{\"message\": " + ex.getMessage() + "}", true);
+            } catch (NotEnoughMoneyException | NoSuchUserException | IllegalArgumentException ex) {
+                sendResponse(out, 400, "Bad Request", "{\"message\": \"" + ex.getMessage() + "\"}", true);
             }
         } catch (IOException ex) {
             System.err.println("Error while sending http response.");

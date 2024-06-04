@@ -1,7 +1,4 @@
 package com.example.services;
 
-import org.springframework.stereotype.Service;
-
-@Service
-public class AuthService {
+public interface AuthService {
 }
