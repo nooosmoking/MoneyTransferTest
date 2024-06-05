@@ -31,7 +31,7 @@ public class AuthServiceImpl implements AuthService{
         if (usersRepository.findByLogin(login).isPresent()) {
             throw new UserAlreadyExistsException("User with login \"" +login+"\" already exists.");
         }
-        usersRepository.save(new User(login, passwordEncoder.encode(password), null, null, true));
+        usersRepository.save(new User(login, passwordEncoder.encode(signinRequest.getPassword()), 0));
     }
 
     @Override
@@ -41,6 +41,6 @@ public class AuthServiceImpl implements AuthService{
         if(optionalUser.isEmpty()) {
             throw new NoSuchUserException("No such user with login \"" + login + "\".");
         }
-         optionalUser.filter(user -> passwordEncoder.matches(password, user.getPassword())).isPresent();
+         optionalUser.filter(user -> passwordEncoder.matches(signupRequest.getPassword(), user.getPassword())).isPresent();
     }
 }
