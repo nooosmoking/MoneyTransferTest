@@ -8,6 +8,7 @@ public class User {
     private String login;
     private String password;
     private double balance;
+    private String jwtToken;
 
     public User(String login, String password, double balance) {
         this.login = login;
