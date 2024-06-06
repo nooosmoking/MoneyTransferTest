@@ -2,8 +2,10 @@ package com.example.server;
 
 import com.example.controllers.BankController;
 import com.example.exceptions.InvalidRequestException;
+import com.example.exceptions.JwtAuthenticationException;
 import com.example.exceptions.MethodNotAllowedException;
 import com.example.exceptions.ResourceNotFoundException;
+import com.example.models.Request;
 import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
 import com.example.models.TransferRequest;
@@ -91,7 +93,10 @@ public class Server {
                     sendErrorResponse(404, "Not Found", "{\"message\": \"" + ex.getMessage() + "\"}");
                 } catch (MethodNotAllowedException ex) {
                     System.err.println(ex.getMessage());
-                    sendErrorResponse(405, "Method Not Allowed ", "{\"message\": \"" + ex.getMessage() + "\"}");
+                    sendErrorResponse(405, "Method Not Allowed", "{\"message\": \"" + ex.getMessage() + "\"}");
+                } catch (JwtAuthenticationException ex){
+                    System.err.println(ex.getMessage());
+                    sendErrorResponse(403,"Forbidden ", "{\"message\": \"" + ex.getMessage() + "\"}");
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -133,7 +138,7 @@ public class Server {
             }
         }
 
-        private void implementMethod() throws IOException, InvalidRequestException, ResourceNotFoundException, MethodNotAllowedException {
+        private void implementMethod() throws JwtAuthenticationException, IOException, InvalidRequestException, ResourceNotFoundException, MethodNotAllowedException {
             String method = headers.get("method");
             String path = headers.get("path");
 
@@ -149,21 +154,21 @@ public class Server {
             }
         }
 
-        private void handleGetRequest(String path) throws ResourceNotFoundException {
+        private void handleGetRequest(String path) throws ResourceNotFoundException, JwtAuthenticationException {
             if (!path.equals("money")) {
                 throw new ResourceNotFoundException("Resource not found \"" + path + "\"");
             }
-            bankController.getBalance("authToken", out);
+            bankController.getBalance(new Request(headers), out);
         }
 
-        private void handlePostRequest(String path, String body) throws InvalidRequestException, ResourceNotFoundException {
+        private void handlePostRequest(String path, String body) throws JwtAuthenticationException, InvalidRequestException, ResourceNotFoundException {
             if (body.isEmpty()) {
                 throw new InvalidRequestException("Body is empty");
             }
             try {
                 switch (path) {
                     case "money":
-                        bankController.transferMoney(new TransferRequest(body), out);
+                        bankController.transferMoney(new TransferRequest(body, headers), out);
                         break;
                     case "signup":
                         bankController.signup(new SignupRequest(body), out);

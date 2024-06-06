@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@AllArgsConstructor
 @Data
-public class SigninRequest {
+public class SigninRequest extends Request {
     private String login;
     private String password;
 
     public SigninRequest(String json) throws JsonProcessingException {
+        super();
         ObjectMapper mapper =
                 new ObjectMapper();
         SigninRequest signinRequest = mapper.readValue(json, SigninRequest.class);

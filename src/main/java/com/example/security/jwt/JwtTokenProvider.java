@@ -1,5 +1,6 @@
 package com.example.security.jwt;
 
+import com.example.exceptions.JwtAuthenticationException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -74,5 +76,15 @@ public class JwtTokenProvider {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    public void doFilter(Map<String, String> headers) throws JwtAuthenticationException {
+        String token = resolveToken(headers);
+        if(token!=null && validateToken(token)){
+            Authentication authentication = getAuthentication(token);
+            if (authentication!=null){
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        }
     }
 }

@@ -1,7 +1,10 @@
 package com.example.controllers;
 
+import com.example.controllers.annotations.AuthRequired;
+import com.example.controllers.aspects.AuthAspect;
 import com.example.exceptions.NoSuchUserException;
 import com.example.exceptions.NotEnoughMoneyException;
+import com.example.models.Request;
 import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
 import com.example.models.TransferRequest;
@@ -12,22 +15,23 @@ import org.springframework.stereotype.Controller;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 @Controller
 public class BankControllerImpl implements BankController {
-    private final ExecutorService executorService;
     private final AuthServiceImpl authService;
     private final TransferServiceImpl transferService;
     private final BalanceServiceImpl balanceService;
-    private volatile boolean isTransferComplete = true;
+    private boolean isTransferComplete = true;
+    private final AuthAspect authAspect;
 
-    public BankControllerImpl(AuthServiceImpl authService, TransferServiceImpl transferService, BalanceServiceImpl balanceService) {
+    public BankControllerImpl(AuthServiceImpl authService, TransferServiceImpl transferService, BalanceServiceImpl balanceService, AuthAspect authAspect) {
         this.authService = authService;
         this.transferService = transferService;
         this.balanceService = balanceService;
-        this.executorService = Executors.newSingleThreadExecutor();
+        this.authAspect = authAspect;
     }
 
     @Override
@@ -41,6 +45,7 @@ public class BankControllerImpl implements BankController {
     }
 
     @Override
+    @AuthRequired
     public void transferMoney(TransferRequest request, DataOutputStream out) {
         isTransferComplete = false;
         try {
@@ -57,7 +62,8 @@ public class BankControllerImpl implements BankController {
     }
 
     @Override
-    public void getBalance(String authToken, DataOutputStream out) {
+    @AuthRequired
+    public void getBalance(Request request, DataOutputStream out) {
         while (!isTransferComplete) {
             Thread.onSpinWait();
         }
