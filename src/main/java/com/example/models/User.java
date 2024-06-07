@@ -10,9 +10,10 @@ public class User {
     private double balance;
     private String jwtToken;
 
-    public User(String login, String password, double balance) {
+    public User(String login, String password, double balance, String jwtToken) {
         this.login = login;
         this.password = password;
         this.balance = balance;
+        this.jwtToken = jwtToken;
     }
 }

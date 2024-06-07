@@ -4,6 +4,7 @@ import com.example.controllers.annotations.AuthRequired;
 import com.example.controllers.aspects.AuthAspect;
 import com.example.exceptions.NoSuchUserException;
 import com.example.exceptions.NotEnoughMoneyException;
+import com.example.exceptions.UserAlreadyExistsException;
 import com.example.models.Request;
 import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
@@ -36,12 +37,30 @@ public class BankControllerImpl implements BankController {
 
     @Override
     public void signup(SignupRequest request, DataOutputStream out) {
-
+            try {
+                try {
+                    authService.signUp(request);
+                    sendResponse(out, 200, "OK", "", false);
+                } catch (UserAlreadyExistsException  ex) {
+                    sendResponse(out, 409, "Conflict", "{\"message\": \"" + ex.getMessage() + "\"}", true);
+                }
+            } catch (IOException ex) {
+                System.err.println("Error while sending http response.");
+            }
     }
 
     @Override
     public void signin(SigninRequest request, DataOutputStream out) {
-
+        try {
+            try {
+                authService.signIn(request);
+                sendResponse(out, 200, "OK", "", false);
+            } catch (NoSuchUserException  ex) {
+                sendResponse(out, 404, "Not found", "{\"message\": \"" + ex.getMessage() + "\"}", true);
+            }
+        } catch (IOException ex) {
+            System.err.println("Error while sending http response.");
+        }
     }
 
     @Override
