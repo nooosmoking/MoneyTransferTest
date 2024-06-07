@@ -43,7 +43,7 @@ public class TransferServiceImpl implements TransferService{
 
     private void validateTransfer(Optional<User> senderOptional, Optional<User> receiverOptional, TransferRequest request) throws NotEnoughMoneyException, NoSuchUserException {
         if (senderOptional.isEmpty()){
-            throw new NoSuchUserException("Error while authenticate.");
+            throw new NoSuchUserException("Error while authenticate.!");
         } else if (receiverOptional.isEmpty()){
             throw new NoSuchUserException("There is no user with id "+request.getReceiverId());
         }

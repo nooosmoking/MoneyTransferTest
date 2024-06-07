@@ -1,4 +1,4 @@
-package com.example.controllers.annotations;
+package com.example.controllers.aspects;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

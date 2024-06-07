@@ -1,6 +1,6 @@
 package com.example.controllers;
 
-import com.example.controllers.annotations.AuthRequired;
+import com.example.controllers.aspects.AuthRequired;
 import com.example.controllers.aspects.AuthAspect;
 import com.example.exceptions.NoSuchUserException;
 import com.example.exceptions.NotEnoughMoneyException;
@@ -12,13 +12,11 @@ import com.example.models.TransferRequest;
 import com.example.services.AuthServiceImpl;
 import com.example.services.BalanceServiceImpl;
 import com.example.services.TransferServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Controller
 public class BankControllerImpl implements BankController {
@@ -28,6 +26,7 @@ public class BankControllerImpl implements BankController {
     private boolean isTransferComplete = true;
     private final AuthAspect authAspect;
 
+    @Autowired
     public BankControllerImpl(AuthServiceImpl authService, TransferServiceImpl transferService, BalanceServiceImpl balanceService, AuthAspect authAspect) {
         this.authService = authService;
         this.transferService = transferService;

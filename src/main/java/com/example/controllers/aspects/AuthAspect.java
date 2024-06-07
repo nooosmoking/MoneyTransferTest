@@ -5,6 +5,7 @@ import com.example.models.Request;
 import com.example.models.User;
 import com.example.repositories.UsersRepository;
 import com.example.security.jwt.JwtTokenProvider;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -28,7 +29,8 @@ public class AuthAspect {
     }
 
     @Before("@annotation(AuthRequired)")
-    public void auth(ProceedingJoinPoint joinPoint) throws Throwable {
+    public void auth(JoinPoint joinPoint) throws Throwable {
+        System.out.println("!!!!");
         Optional<Object> object = Arrays.stream(joinPoint
                         .getArgs())
                 .filter(o -> o instanceof Request)
@@ -39,8 +41,5 @@ public class AuthAspect {
                 String login = jwtTokenProvider.doFilter(headers);
                 request.setLogin(login);
         }
-
-        joinPoint.proceed();
-
     }
 }
