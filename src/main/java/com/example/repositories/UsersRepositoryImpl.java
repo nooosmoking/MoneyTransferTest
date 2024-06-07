@@ -1,5 +1,6 @@
 package com.example.repositories;
 
+import com.example.exceptions.UserAlreadyExistsException;
 import com.example.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -50,15 +51,17 @@ public class UsersRepositoryImpl implements UsersRepository {
     //
     @Override
     public void save(User entity) {
-//        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-//        if(findByLogin(entity.getLogin()).isPresent()){
-//            return false;
-//        }
-//        String query = "INSERT INTO users (login, password) VALUES (:login, :password);";
-//        jdbcTemplate.update(query, new MapSqlParameterSource()
-//                .addValue("login", entity.getLogin())
-//                .addValue("password", entity.getPassword()));
-//        return true;
+        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        String login = entity.getLogin();
+        if(findByLogin(login).isPresent()){
+            return;
+
+        }
+        String query = "INSERT INTO users (login, password, jwttoken) VALUES (:login, :password, :jwttoken);";
+        jdbcTemplate.update(query, new MapSqlParameterSource()
+                .addValue("login", login)
+                .addValue("password", entity.getPassword())
+                .addValue("jwttoken", entity.getJwtToken()));
     }
 //
     @Override
@@ -83,11 +86,11 @@ public class UsersRepositoryImpl implements UsersRepository {
         jdbcTemplate.update(query, new MapSqlParameterSource().addValue("balance", entity.getBalance()).addValue("id", entity.getId()));
     }
 
-//    @Override
-//    public Optional<User> findByLogin(String login) {
-//        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-//        String query = "SELECT * FROM users WHERE login = :login";
-//        List<User> user = jdbcTemplate.query(query, new MapSqlParameterSource().addValue("login", login), new BeanPropertyRowMapper<>(User.class));
-//        return user.stream().findFirst();
-//    }
+    @Override
+    public Optional<User> findByLogin(String login) {
+        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        String query = "SELECT * FROM users WHERE login = :login";
+        List<User> user = jdbcTemplate.query(query, new MapSqlParameterSource().addValue("login", login), new BeanPropertyRowMapper<>(User.class));
+        return user.stream().findFirst();
+    }
 }

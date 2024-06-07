@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY NOT NULL,
     login VARCHAR(30) NOT NULL,
     password VARCHAR(1000) NOT NULL,
-    balance INTEGER NOT NULL CHECK (balance > 0)
+    balance INTEGER NOT NULL CHECK (balance >= 0) DEFAULT 0,
+    jwttoken VARCHAR(1000)
 );
 
 CREATE TABLE IF NOT EXISTS transfers (

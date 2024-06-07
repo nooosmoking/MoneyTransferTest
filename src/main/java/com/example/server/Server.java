@@ -49,11 +49,9 @@ public class Server {
     public void run() {
         System.out.println("Starting server. For exiting write \"stop\"");
         while (true) {
-            System.out.println("aaaaa");
             try {
                 Socket clientSocket = server.accept();
                 new ClientThread(clientSocket).start();
-                System.out.println("bbbb");
             } catch (IOException e) {
                 logger.error("Error while connecting client");
             }
@@ -99,9 +97,7 @@ public class Server {
                     sendErrorResponse(403,"Forbidden ", "{\"message\": \"" + ex.getMessage() + "\"}");
                 }
             } catch (IOException ex) {
-                ex.printStackTrace();
                 System.err.println("Error while handling http request.");
-                System.exit(-1);
             } catch (NullPointerException ignored) {
             }
 
@@ -186,8 +182,7 @@ public class Server {
         }
 
         private String readBody() throws IOException {
-            String lengthString;
-            if ((lengthString = headers.get("Content-Length")) == null) {
+            if (headers.get("Content-Length") == null) {
                 return null;
             }
             StringBuilder bodyBuilder = new StringBuilder();
