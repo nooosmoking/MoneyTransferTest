@@ -11,11 +11,10 @@ import lombok.NoArgsConstructor;
 import java.util.Map;
 
 @Data
+@NoArgsConstructor
 public class TransferRequest extends Request{
     private double amount;
-    @JsonProperty("senderid")
-    private long senderId;
-    @JsonProperty("receiverid")
+    @JsonProperty("to")
     private long receiverId;
 
     public TransferRequest(String json, Map<String, String> headers) throws JsonProcessingException {
@@ -24,7 +23,7 @@ public class TransferRequest extends Request{
                 new ObjectMapper();
         TransferRequest transferRequest = mapper.readValue(json, TransferRequest.class);
         this.amount = transferRequest.getAmount();
-        this.senderId = transferRequest.getSenderId();
+        this.setLogin(transferRequest.getLogin());
         this.receiverId = transferRequest.getReceiverId();
     }
 }

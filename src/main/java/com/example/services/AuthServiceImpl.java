@@ -29,17 +29,18 @@ public class AuthServiceImpl implements AuthService{
     }
 
     @Override
-    public void signUp(SignupRequest signupRequest) throws UserAlreadyExistsException {
+    public String signUp(SignupRequest signupRequest) throws UserAlreadyExistsException {
         String login = signupRequest.getLogin();
         if (usersRepository.findByLogin(login).isPresent()) {
             throw new UserAlreadyExistsException("User with login \"" +login+"\" already exists.");
         }
         String token = jwtTokenProvider.createToken(login);
         usersRepository.save(new User(login, passwordEncoder.encode(signupRequest.getPassword()), 0, token));
+        return token;
     }
 
     @Override
-    public void signIn(SigninRequest signinRequest) throws NoSuchUserException{
+    public String signIn(SigninRequest signinRequest) throws NoSuchUserException{
         String login = signinRequest.getLogin();
         Optional<User> optionalUser = usersRepository.findByLogin(login);
         if(optionalUser.isEmpty()) {
@@ -47,5 +48,6 @@ public class AuthServiceImpl implements AuthService{
         }
          optionalUser.filter(user -> passwordEncoder.matches(signinRequest
                  .getPassword(), user.getPassword())).isPresent();
+        return null;
     }
 }

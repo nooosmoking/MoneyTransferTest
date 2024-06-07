@@ -24,10 +24,7 @@ public class TransferServiceImpl implements TransferService{
     }
 
     public synchronized void transfer(TransferRequest request) throws NoSuchUserException, NotEnoughMoneyException, IllegalArgumentException {
-        if (request.getReceiverId() == request.getSenderId()){
-            throw new IllegalArgumentException("Forbidden to send money to yourself.");
-        }
-        Optional<User> senderOptional = usersRepository.findById(request.getSenderId());
+        Optional<User> senderOptional = usersRepository.findByLogin(request.getLogin());
         Optional<User> receiverOptional = usersRepository.findById(request.getReceiverId());
 
         validateTransfer(senderOptional, receiverOptional, request);
@@ -46,11 +43,15 @@ public class TransferServiceImpl implements TransferService{
 
     private void validateTransfer(Optional<User> senderOptional, Optional<User> receiverOptional, TransferRequest request) throws NotEnoughMoneyException, NoSuchUserException {
         if (senderOptional.isEmpty()){
-            throw new NoSuchUserException("There is no user with id "+request.getSenderId());
+            throw new NoSuchUserException("Error while authenticate.");
         } else if (receiverOptional.isEmpty()){
             throw new NoSuchUserException("There is no user with id "+request.getReceiverId());
         }
         User sender = senderOptional.get();
+        User receiver = receiverOptional.get();
+        if (receiver.getId() == sender.getId()){
+            throw new IllegalArgumentException("Forbidden to send money to yourself.");
+        }
         if (sender.getBalance() < request.getAmount()){
             throw new NotEnoughMoneyException("User with id " + sender.getId() +" have not enough money to make transaction.");
         }

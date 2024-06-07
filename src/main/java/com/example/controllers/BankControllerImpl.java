@@ -39,8 +39,8 @@ public class BankControllerImpl implements BankController {
     public void signup(SignupRequest request, DataOutputStream out) {
             try {
                 try {
-                    authService.signUp(request);
-                    sendResponse(out, 200, "OK", "", false);
+                    String token = authService.signUp(request);
+                    sendResponse(out, 200, "OK", "{\"token\":\""+token+"\"}", true);
                 } catch (UserAlreadyExistsException  ex) {
                     sendResponse(out, 409, "Conflict", "{\"message\": \"" + ex.getMessage() + "\"}", true);
                 }
@@ -53,8 +53,8 @@ public class BankControllerImpl implements BankController {
     public void signin(SigninRequest request, DataOutputStream out) {
         try {
             try {
-                authService.signIn(request);
-                sendResponse(out, 200, "OK", "", false);
+                String token = authService.signIn(request);
+                sendResponse(out, 200, "OK", "", true);
             } catch (NoSuchUserException  ex) {
                 sendResponse(out, 404, "Not found", "{\"message\": \"" + ex.getMessage() + "\"}", true);
             }

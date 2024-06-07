@@ -78,13 +78,11 @@ public class JwtTokenProvider {
         return null;
     }
 
-    public void doFilter(Map<String, String> headers) throws JwtAuthenticationException {
+    public String doFilter(Map<String, String> headers) throws JwtAuthenticationException {
         String token = resolveToken(headers);
-        if(token!=null && validateToken(token)){
-            Authentication authentication = getAuthentication(token);
-            if (authentication!=null){
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
+        if(token==null || validateToken(token)){
+            throw new JwtAuthenticationException("Error while authenticate.");
         }
+        return getLogin(token);
     }
 }

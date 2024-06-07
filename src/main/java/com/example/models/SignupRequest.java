@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class SignupRequest extends Request{
-    private String login;
     private String password;
 
     public SignupRequest(String json) throws JsonProcessingException {
@@ -17,7 +16,7 @@ public class SignupRequest extends Request{
         ObjectMapper mapper =
                 new ObjectMapper();
         SignupRequest signupRequest = mapper.readValue(json, SignupRequest.class);
-        this.login = signupRequest.getLogin();
+        this.setLogin(signupRequest.getLogin());
         this.password = signupRequest.getPassword();
     }
 }

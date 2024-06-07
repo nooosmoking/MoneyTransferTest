@@ -9,10 +9,13 @@ import lombok.NoArgsConstructor;
 import java.util.Map;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class Request {
      @JsonIgnore
     private Map<String, String> headers;
+    private String login;
 
+    public Request(Map<String, String> headers) {
+        this.headers = headers;
+    }
 }

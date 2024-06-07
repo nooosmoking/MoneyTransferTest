@@ -6,8 +6,8 @@ import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
 
 public interface AuthService {
-    void signUp(SignupRequest signinRequest) throws UserAlreadyExistsException;
+    String signUp(SignupRequest signinRequest) throws UserAlreadyExistsException;
 
-    void signIn(SigninRequest signupRequest) throws NoSuchUserException;
+    String signIn(SigninRequest signupRequest) throws NoSuchUserException;
 
 }

@@ -7,7 +7,6 @@ import lombok.Data;
 
 @Data
 public class SigninRequest extends Request {
-    private String login;
     private String password;
 
     public SigninRequest(String json) throws JsonProcessingException {
@@ -15,7 +14,7 @@ public class SigninRequest extends Request {
         ObjectMapper mapper =
                 new ObjectMapper();
         SigninRequest signinRequest = mapper.readValue(json, SigninRequest.class);
-        this.login = signinRequest.getLogin();
+        this.setLogin(signinRequest.getLogin());
         this.password = signinRequest.getPassword();
     }
 }
