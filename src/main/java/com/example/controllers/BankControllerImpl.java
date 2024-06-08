@@ -5,30 +5,24 @@ import com.example.controllers.aspects.AuthRequired;
 import com.example.exceptions.NoSuchUserException;
 import com.example.exceptions.NotEnoughMoneyException;
 import com.example.exceptions.UserAlreadyExistsException;
-import com.example.models.Request;
-import com.example.models.SigninRequest;
-import com.example.models.SignupRequest;
-import com.example.models.TransferRequest;
-import com.example.services.AuthServiceImpl;
-import com.example.services.BalanceServiceImpl;
-import com.example.services.TransferServiceImpl;
+import com.example.models.*;
+import com.example.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 @Controller
 public class BankControllerImpl implements BankController {
-    private final AuthServiceImpl authService;
-    private final TransferServiceImpl transferService;
-    private final BalanceServiceImpl balanceService;
+    private final AuthService authService;
+    private final TransferService transferService;
+    private final BalanceService balanceService;
     private boolean isTransferComplete = true;
     private final AuthAspect authAspect;
 
     @Autowired
-    public BankControllerImpl(AuthServiceImpl authService, TransferServiceImpl transferService, BalanceServiceImpl balanceService, AuthAspect authAspect) {
+    public BankControllerImpl(AuthService authService, TransferService transferService, BalanceService balanceService, AuthAspect authAspect) {
         this.authService = authService;
         this.transferService = transferService;
         this.balanceService = balanceService;
@@ -36,25 +30,25 @@ public class BankControllerImpl implements BankController {
     }
 
     @Override
-    public void signup(SignupRequest request, DataOutputStream out) throws UserAlreadyExistsException, IOException {
+    public Response signup(SignupRequest request) throws UserAlreadyExistsException, IOException {
         String token = authService.signUp(request);
-        sendResponse(out, 200, "OK", "{\"token\":\"" + token + "\"}", true);
+        return new Response( 200, "OK", "{\"token\":\"" + token + "\"}");
 
     }
 
     @Override
-    public void signin(SigninRequest request, DataOutputStream out) throws AuthenticationException, NoSuchUserException, IOException {
+    public Response signin(SigninRequest request) throws AuthenticationException, NoSuchUserException, IOException{
         String token = authService.signIn(request);
-        sendResponse(out, 200, "OK", "{\"token\":\"" + token + "\"}", true);
+        return new Response(  200, "OK", "{\"token\":\"" + token + "\"}");
     }
 
     @Override
     @AuthRequired
-    public void transferMoney(TransferRequest request, DataOutputStream out) throws NotEnoughMoneyException, NoSuchUserException, IllegalArgumentException, IOException {
+    public Response transferMoney(TransferRequest request) throws NotEnoughMoneyException, NoSuchUserException, IllegalArgumentException, IOException {
         isTransferComplete = false;
         try {
             transferService.transfer(request);
-            sendResponse(out, 200, "OK", "", false);
+            return new Response( 200, "OK", "");
         } finally {
             isTransferComplete = true;
         }
@@ -62,23 +56,25 @@ public class BankControllerImpl implements BankController {
 
     @Override
     @AuthRequired
-    public void getBalance(Request request, DataOutputStream out) {
+    public Response getBalance(Request request) throws IOException {
         while (!isTransferComplete) {
             Thread.onSpinWait();
         }
+        int balance = balanceService.getBalance(request);
+        return new Response(  200, "OK", "{\"balance\":"+balance+"}");
     }
 
-    private void sendResponse(DataOutputStream out, int status, String statusMessage, String body, boolean includeContentType) throws IOException {
-        StringBuilder response = new StringBuilder("HTTP/1.1 " + status + " " + statusMessage + "\r\n");
-
-        if (includeContentType) {
-            response.append("Content-Type: application/json\r\n");
-            response.append("Content-Length: ").append(body.length()).append("\r\n");
-
-            response.append("\r\n");
-            response.append(body);
-        }
-
-        out.write(response.toString().getBytes());
-    }
+//    private void sendResponse(DataOutputStream out, int status, String statusMessage, String body, boolean includeContentType) throws IOException {
+//        StringBuilder response = new StringBuilder("HTTP/1.1 " + status + " " + statusMessage + "\r\n");
+//
+//        if (includeContentType) {
+//            response.append("Content-Type: application/json\r\n");
+//            response.append("Content-Length: ").append(body.length()).append("\r\n");
+//
+//            response.append("\r\n");
+//            response.append(body);
+//        }
+//
+//        out.write(response.toString().getBytes());
+//    }
 }

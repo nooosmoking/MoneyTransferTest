@@ -39,7 +39,7 @@ public class JwtTokenProvider {
         secret = Base64.getEncoder().encodeToString(secret.getBytes());
     }
 
-    public String createToken(String login) {
+    public synchronized String createToken(String login) {
         Claims claims = Jwts.claims().setSubject(login);
         Date now = new Date();
         Date validity = new Date(now.getTime() + validInMilliseconds);
@@ -57,11 +57,11 @@ public class JwtTokenProvider {
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
-    public String getLogin(String token) {
+    public synchronized String getLogin(String token) {
         return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody().getSubject();
     }
 
-    public boolean validateToken(String token) {
+    public synchronized boolean validateToken(String token) {
         try {
             Jws<Claims> claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
         } catch (ExpiredJwtException ex) {
