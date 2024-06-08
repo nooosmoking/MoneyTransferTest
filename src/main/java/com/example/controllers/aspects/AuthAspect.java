@@ -30,7 +30,6 @@ public class AuthAspect {
 
     @Before("@annotation(AuthRequired)")
     public void auth(JoinPoint joinPoint) throws Throwable {
-        System.out.println("!!!!");
         Optional<Object> object = Arrays.stream(joinPoint
                         .getArgs())
                 .filter(o -> o instanceof Request)
