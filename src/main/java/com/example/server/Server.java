@@ -1,10 +1,7 @@
 package com.example.server;
 
 import com.example.controllers.BankController;
-import com.example.exceptions.InvalidRequestException;
-import com.example.exceptions.JwtAuthenticationException;
-import com.example.exceptions.MethodNotAllowedException;
-import com.example.exceptions.ResourceNotFoundException;
+import com.example.exceptions.*;
 import com.example.models.Request;
 import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
@@ -14,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.security.sasl.AuthenticationException;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -83,24 +81,25 @@ public class Server {
                     parseHeader();
                     body = readBody();
                     implementMethod();
-                } catch (InvalidRequestException ex) {
+                } catch (InvalidRequestException|NotEnoughMoneyException | IllegalArgumentException ex) {
                     System.err.println(ex.getMessage());
-                    sendErrorResponse(400, "Bad Request", "{\"message\": \"" + ex.getMessage() + "\"}");
-                } catch (ResourceNotFoundException ex) {
+                    sendResponse(400, "Bad Request", "{\"message\": \"" + ex.getMessage() + "\"}");
+                } catch (ResourceNotFoundException | NoSuchUserException ex) {
                     System.err.println(ex.getMessage());
-                    sendErrorResponse(404, "Not Found", "{\"message\": \"" + ex.getMessage() + "\"}");
+                    sendResponse(404, "Not Found", "{\"message\": \"" + ex.getMessage() + "\"}");
                 } catch (MethodNotAllowedException ex) {
                     System.err.println(ex.getMessage());
-                    sendErrorResponse(405, "Method Not Allowed", "{\"message\": \"" + ex.getMessage() + "\"}");
-                } catch (JwtAuthenticationException ex){
+                    sendResponse(405, "Method Not Allowed", "{\"message\": \"" + ex.getMessage() + "\"}");
+                } catch (JwtAuthenticationException | AuthenticationException ex){
                     System.err.println(ex.getMessage());
-                    sendErrorResponse(403,"Forbidden ", "{\"message\": \"" + ex.getMessage() + "\"}");
+                    sendResponse(403,"Forbidden ", "{\"message\": \"" + ex.getMessage() + "\"}");
+                }catch (UserAlreadyExistsException  ex) {
+                    sendResponse(409, "Conflict", "{\"message\": \"" + ex.getMessage() + "\"}");
                 }
             } catch (IOException ex) {
-                System.err.println("Error while handling http request.");
+                System.err.println("Error while connecting client.");
             } catch (NullPointerException ignored) {
             }
-
         }
 
         private void parseStartLine() throws IOException, InvalidRequestException {
@@ -134,7 +133,7 @@ public class Server {
             }
         }
 
-        private void implementMethod() throws JwtAuthenticationException, IOException, InvalidRequestException, ResourceNotFoundException, MethodNotAllowedException {
+        private void implementMethod() throws JwtAuthenticationException, IOException, InvalidRequestException, ResourceNotFoundException, MethodNotAllowedException, AuthenticationException, UserAlreadyExistsException, NotEnoughMoneyException {
             String method = headers.get("method");
             String path = headers.get("path");
 
@@ -157,7 +156,7 @@ public class Server {
             bankController.getBalance(new Request(headers), out);
         }
 
-        private void handlePostRequest(String path, String body) throws JwtAuthenticationException, InvalidRequestException, ResourceNotFoundException {
+        private void handlePostRequest(String path, String body) throws InvalidRequestException, ResourceNotFoundException, IOException, org.springframework.security.core.AuthenticationException, UserAlreadyExistsException, NotEnoughMoneyException {
             if (body.isEmpty()) {
                 throw new InvalidRequestException("Body is empty");
             }
@@ -193,7 +192,7 @@ public class Server {
             return bodyBuilder.toString();
         }
 
-        private void sendErrorResponse(int status, String statusMessage, String body) throws IOException {
+        private void sendResponse(int status, String statusMessage, String body) throws IOException {
             String response = "HTTP/1.1 " + status + " " + statusMessage + "\r\nContent-Type: application/json\r\nContent-Length: "
                     + body.length() + "\r\n\r\n" + body;
 

@@ -12,11 +12,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.security.sasl.AuthenticationException;
 import java.util.Optional;
 
 @Service
 @Transactional
-public class AuthServiceImpl implements AuthService{
+public class AuthServiceImpl implements AuthService {
     private final UsersRepository usersRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -32,7 +33,7 @@ public class AuthServiceImpl implements AuthService{
     public String signUp(SignupRequest signupRequest) throws UserAlreadyExistsException {
         String login = signupRequest.getLogin();
         if (usersRepository.findByLogin(login).isPresent()) {
-            throw new UserAlreadyExistsException("User with login \"" +login+"\" already exists.");
+            throw new UserAlreadyExistsException("User with login \"" + login + "\" already exists.");
         }
         String token = jwtTokenProvider.createToken(login);
         usersRepository.save(new User(login, passwordEncoder.encode(signupRequest.getPassword()), 0, token));
@@ -40,14 +41,18 @@ public class AuthServiceImpl implements AuthService{
     }
 
     @Override
-    public String signIn(SigninRequest signinRequest) throws NoSuchUserException{
+    public String signIn(SigninRequest signinRequest) throws NoSuchUserException, AuthenticationException {
         String login = signinRequest.getLogin();
         Optional<User> optionalUser = usersRepository.findByLogin(login);
-        if(optionalUser.isEmpty()) {
+        if (optionalUser.isEmpty()) {
             throw new NoSuchUserException("No such user with login \"" + login + "\".");
         }
-         optionalUser.filter(user -> passwordEncoder.matches(signinRequest
-                 .getPassword(), user.getPassword())).isPresent();
-        return null;
+        User user = optionalUser.get();
+        if (!passwordEncoder.matches(signinRequest.getPassword(), user.getPassword())) {
+            throw new AuthenticationException("Wrong password");}
+        String token = jwtTokenProvider.createToken(login);
+        user.setJwtToken(token);
+        usersRepository.update(user);
+        return token;
     }
 }

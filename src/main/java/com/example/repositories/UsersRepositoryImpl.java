@@ -66,9 +66,14 @@ public class UsersRepositoryImpl implements UsersRepository {
 //
     @Override
     public void update(User entity) {
-//        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-//        String query = "UPDATE users SET login = :login, password = :password WHERE id = :id;";
-//        jdbcTemplate.update(query, new BeanPropertySqlParameterSource(entity));
+        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
+        String query = "UPDATE users SET login=:login, password=:password, balance=:balance, jwttoken=:jwttoken WHERE id = :id;";
+        jdbcTemplate.update(query, new MapSqlParameterSource()
+                .addValue("login", entity.getLogin())
+                .addValue("password", entity.getPassword())
+                .addValue("balance", entity.getBalance())
+                .addValue("jwttoken", entity.getJwtToken())
+                .addValue("id", entity.getId()));
     }
 
 
