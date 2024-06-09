@@ -14,6 +14,7 @@ public class RequestParser {
     private final String url;
     private Map<String, String> requestHeaders;
     private String requestBody;
+
     public RequestParser(BufferedReader in, String url) {
         this.in = in;
         this.url = url;
@@ -24,6 +25,7 @@ public class RequestParser {
         parseHeader();
         readBody();
     }
+
     private void parseStartLine() throws IOException, InvalidRequestException {
         requestHeaders = new HashMap<>();
         String request = in.readLine();
@@ -44,7 +46,6 @@ public class RequestParser {
     private void parseHeader() throws IOException, InvalidRequestException {
         String request;
         while (!(request = in.readLine()).isEmpty()) {
-
             String[] parts = request.split(": ");
             try {
                 requestHeaders.put(parts[0], parts[1]);

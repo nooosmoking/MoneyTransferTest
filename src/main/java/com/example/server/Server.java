@@ -2,11 +2,9 @@ package com.example.server;
 
 import com.example.controllers.BankController;
 import com.example.exceptions.*;
+import com.example.logger.Logger;
 import com.example.models.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import lombok.NoArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -21,9 +19,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 @Component
-
 public class Server {
-    private static final Logger logger = LoggerFactory.getLogger(Server.class);
     private Scanner scanner;
     private ServerSocket server;
     private String url;
@@ -47,7 +43,7 @@ public class Server {
             startStdin();
             connectClients();
         } catch (IOException e) {
-            logger.error("Error while starting server.");
+            System.err.println("Error while starting server.");
         } finally {
             close();
         }
@@ -71,9 +67,24 @@ public class Server {
                 Socket clientSocket = server.accept();
                 new ClientThread(clientSocket).start();
             } catch (IOException e) {
-                logger.error("Error while connecting client");
+                System.err.println("Error while connecting client");
             }
         }
+    }
+
+    private void close() {
+        if (server != null) {
+            try {
+                server.close();
+            } catch (IOException ignored) {
+                System.err.println("Error while closing logger");
+            }
+        }
+        Logger logger;
+        if ((logger = Logger.getInstance()) != null) {
+            logger.close();
+        }
+        System.exit(0);
     }
 
     private class ClientThread extends Thread {
@@ -86,7 +97,6 @@ public class Server {
 
         public ClientThread(Socket clientSocket) throws IOException {
             this.clientSocket = clientSocket;
-            logger.info("New client connected");
         }
 
         public void run() {
@@ -96,9 +106,9 @@ public class Server {
                 handleHttpRequest();
             } catch (IOException e) {
                 System.err.println("Error while connecting client.");
-            } catch (NullPointerException ex){
+            } catch (NullPointerException ex) {
                 System.err.println("Error while generating response.");
-            }finally {
+            } finally {
                 closeClientSocket();
             }
         }
@@ -164,29 +174,21 @@ public class Server {
             } catch (JsonProcessingException ex) {
                 throw new InvalidRequestException("Error while serialization body");
             }
-
         }
 
         private void sendResponse() throws IOException, NullPointerException {
-
             String responseStr = responseFactory.createResponseString(response);
-
             out.write(responseStr.getBytes());
         }
 
         private void closeClientSocket() {
-            try {
-                clientSocket.close();
-            } catch (IOException ignored) {
+            if (clientSocket != null) {
+                try {
+                    clientSocket.close();
+                } catch (IOException ex) {
+                    System.err.println("Error while closing client socket");
+                }
             }
         }
-    }
-
-    public void close() {
-        try {
-            server.close();
-        } catch (IOException ignored) {
-        }
-        System.exit(0);
     }
 }

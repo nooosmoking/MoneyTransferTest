@@ -1,6 +1,7 @@
 package com.example.services;
 
 import com.example.exceptions.NoSuchUserException;
+import com.example.logger.Logger;
 import com.example.models.Request;
 import com.example.models.User;
 import com.example.repositories.UsersRepository;
@@ -25,6 +26,8 @@ public class BalanceServiceImpl implements BalanceService{
         if (optionalUser.isEmpty()){
             throw new NoSuchUserException("User with login "+login+" not exists.");
         }
-        return optionalUser.get().getBalance();
+        double balance = optionalUser.get().getBalance();
+        Logger.getInstance().logUserBalance(login, balance);
+        return balance;
     }
 }

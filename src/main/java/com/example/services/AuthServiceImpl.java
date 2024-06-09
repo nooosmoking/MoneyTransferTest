@@ -2,6 +2,7 @@ package com.example.services;
 
 import com.example.exceptions.NoSuchUserException;
 import com.example.exceptions.UserAlreadyExistsException;
+import com.example.logger.Logger;
 import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
 import com.example.models.User;
@@ -37,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
         }
         String token = jwtTokenProvider.createToken(login);
         usersRepository.save(new User(login, passwordEncoder.encode(signupRequest.getPassword()), 0, token));
+        Logger.getInstance().logSignUp(login);
         return token;
     }
 
@@ -53,6 +55,7 @@ public class AuthServiceImpl implements AuthService {
         String token = jwtTokenProvider.createToken(login);
         user.setJwtToken(token);
         usersRepository.update(user);
+        Logger.getInstance().logSignIn(login);
         return token;
     }
 }

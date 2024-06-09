@@ -2,6 +2,7 @@ package com.example.services;
 
 import com.example.exceptions.NoSuchUserException;
 import com.example.exceptions.NotEnoughMoneyException;
+import com.example.logger.Logger;
 import com.example.models.Transfer;
 import com.example.models.TransferRequest;
 import com.example.models.User;
@@ -29,16 +30,18 @@ public class TransferServiceImpl implements TransferService{
 
         validateTransfer(senderOptional, receiverOptional, request);
 
+        double amount = request.getAmount();
         User sender = senderOptional.get();
-        sender.setBalance(sender.getBalance()-request.getAmount());
+        sender.setBalance(sender.getBalance()-amount);
         User receiver = receiverOptional.get();
-        receiver.setBalance(receiver.getBalance()+request.getAmount());
+        receiver.setBalance(receiver.getBalance()+amount);
 
-        Transfer transfer = new Transfer(request.getAmount(), sender, receiver);
+        Transfer transfer = new Transfer(amount, sender, receiver);
         transferRepository.save(transfer);
 
         usersRepository.updateBalance(sender);
         usersRepository.updateBalance(receiver);
+        Logger.getInstance().logOperation(sender.getLogin(), receiver.getLogin(), amount);
     }
 
     private void validateTransfer(Optional<User> senderOptional, Optional<User> receiverOptional, TransferRequest request) throws NotEnoughMoneyException, NoSuchUserException {
