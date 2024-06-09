@@ -9,7 +9,8 @@ public class Main {
     public static void main(String[] args) {
         ApplicationContext context = new AnnotationConfigApplicationContext(MoneyTransferApplicationConfig.class);
         Server server = context.getBean(Server.class);
-        server.run(getAddress(args));}
+        String[] address = getAddress(args);
+        server.run(address[0], address[1]);}
 
     private static String[] getAddress(String[] args) {
         if (args.length != 2 || !args[0].startsWith("--url=") ||!args[1].startsWith("--port=")) {

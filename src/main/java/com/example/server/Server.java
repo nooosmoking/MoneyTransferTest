@@ -6,6 +6,7 @@ import com.example.models.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.security.sasl.AuthenticationException;
@@ -15,32 +16,34 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
 @Component
 public class Server {
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
-    private final Scanner scanner = new Scanner(System.in);
+    private Scanner scanner;
     private ServerSocket server;
     private final BankController bankController;
     private String url;
 
+    @Autowired
     public Server(BankController bankController) {
         this.bankController = bankController;
     }
 
-    public void run(String[] address) {
-        int port = Integer.parseInt(address[1]);
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
+    public void run(String url, String port) {
+        this.url = url;
+        try (Scanner scanner = new Scanner(System.in); ServerSocket serverSocket = new ServerSocket(port)) {
             this.server = serverSocket;
-            this.url = address[0];
+            this.scanner = scanner;
             System.out.println("Starting server. For exiting write \"stop\"");
 
             connectClients();
         } catch (IOException e) {
             logger.error("Error while starting server.");
+        } finally {
+            close();
         }
     }
 
@@ -158,7 +161,7 @@ public class Server {
             out.write(responseStr.getBytes());
         }
 
-        private void closeClientSocket(){
+        private void closeClientSocket() {
             try {
                 clientSocket.close();
             } catch (IOException ignored) {
@@ -167,6 +170,10 @@ public class Server {
     }
 
     public void close() {
-
+        try {
+            server.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
