@@ -9,10 +9,9 @@ public class Main {
     public static void main(String[] args) {
         ApplicationContext context = new AnnotationConfigApplicationContext(MoneyTransferApplicationConfig.class);
         Server server = context.getBean(Server.class);
-        server.setAddress(getAddress(args));
-        server.run();}
+        server.run(getAddress(args));}
 
-    public static String[] getAddress(String[] args) {
+    private static String[] getAddress(String[] args) {
         if (args.length != 2 || !args[0].startsWith("--url=") ||!args[1].startsWith("--port=")) {
             System.err.println("Please write url and port in arguments.");
             System.exit(-1);

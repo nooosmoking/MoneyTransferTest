@@ -22,8 +22,8 @@ import java.util.Scanner;
 @Component
 public class Server {
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
-    private ServerSocket server;
     private final Scanner scanner = new Scanner(System.in);
+    private ServerSocket server;
     private final BankController bankController;
     private String url;
 
@@ -31,18 +31,20 @@ public class Server {
         this.bankController = bankController;
     }
 
-    public void setAddress(String[] address) {
+    public void run(String[] address) {
         int port = Integer.parseInt(address[1]);
-        try {
-            this.server = new ServerSocket(port);
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            this.server = serverSocket;
             this.url = address[0];
+            System.out.println("Starting server. For exiting write \"stop\"");
+
+            connectClients();
         } catch (IOException e) {
             logger.error("Error while starting server.");
         }
     }
 
-    public void run() {
-        System.out.println("Starting server. For exiting write \"stop\"");
+    private void connectClients() {
         while (true) {
             try {
                 Socket clientSocket = server.accept();
@@ -63,8 +65,6 @@ public class Server {
 
         public ClientThread(Socket clientSocket) throws IOException {
             this.clientSocket = clientSocket;
-            this.out = new DataOutputStream(clientSocket.getOutputStream());
-            this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             logger.info("New client connected");
         }
 
@@ -75,14 +75,14 @@ public class Server {
                 handleHttpRequest();
             } catch (IOException e) {
                 System.err.println("Error while connecting client.");
+            } finally {
+                closeClientSocket();
             }
         }
 
         private void handleHttpRequest() throws IOException {
             try {
-                parseStartLine();
-                parseHeader();
-                readBody();
+                parseRequest();
                 implementMethod();
             } catch (InvalidRequestException | NotEnoughMoneyException | IllegalArgumentException ex) {
                 response = new Response(400, "Bad Request", "{\"message\": \"" + ex.getMessage() + "\"}");
@@ -98,35 +98,11 @@ public class Server {
             sendResponse();
         }
 
-        private void parseStartLine() throws IOException, InvalidRequestException {
-            requestHeaders = new HashMap<>();
-            String request = in.readLine();
-            String[] parts = request.split(" ");
-            try {
-                requestHeaders.put("method", parts[0]);
-                String[] uri = parts[1].split("/");
-                if (uri[0].equals(url) || uri[0].isEmpty()) {
-                    requestHeaders.put("path", uri[1]);
-                } else {
-                    throw new InvalidRequestException("Unknown request URL.");
-                }
-            } catch (IndexOutOfBoundsException | NullPointerException ex) {
-                throw new InvalidRequestException("Invalid http request start line.");
-            }
-        }
-
-        private void parseHeader() throws IOException, InvalidRequestException {
-            String request;
-            while (!(request = in.readLine()).isEmpty()) {
-
-                String[] parts = request.split(": ");
-                try {
-                    requestHeaders.put(parts[0], parts[1]);
-                    String[] uri = parts[1].split("/");
-                } catch (IndexOutOfBoundsException | NullPointerException ex) {
-                    throw new InvalidRequestException("Invalid http header line.");
-                }
-            }
+        private void parseRequest() throws InvalidRequestException, IOException {
+            RequestParser requestParser = new RequestParser(in, url);
+            requestParser.parse();
+            this.requestHeaders = requestParser.getRequestHeaders();
+            this.requestBody = requestParser.getRequestBody();
         }
 
         private void implementMethod() throws JwtAuthenticationException, IOException, InvalidRequestException, ResourceNotFoundException, MethodNotAllowedException, AuthenticationException, UserAlreadyExistsException, NotEnoughMoneyException {
@@ -176,22 +152,17 @@ public class Server {
 
         }
 
-        private void readBody() throws IOException {
-            if (requestHeaders.get("Content-Length") == null) {
-                return;
-            }
-            StringBuilder bodyBuilder = new StringBuilder();
-            int length = Integer.parseInt(requestHeaders.get("Content-Length"));
-            for (int i = 0; i < length; i++) {
-                bodyBuilder.append((char) in.read());
-            }
-            requestBody = bodyBuilder.toString();
-        }
-
         private void sendResponse() throws IOException {
             String responseStr = "HTTP/1.1 " + response.getStatus() + " " + response.getStatusMessage() + "\r\nContent-Type: application/json\r\nContent-Length: " + response.getBody().length() + "\r\n\r\n" + response.getBody();
 
             out.write(responseStr.getBytes());
+        }
+
+        private void closeClientSocket(){
+            try {
+                clientSocket.close();
+            } catch (IOException ignored) {
+            }
         }
     }
 

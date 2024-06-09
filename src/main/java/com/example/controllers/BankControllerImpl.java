@@ -60,21 +60,7 @@ public class BankControllerImpl implements BankController {
         while (!isTransferComplete) {
             Thread.onSpinWait();
         }
-        int balance = balanceService.getBalance(request);
+        double balance = balanceService.getBalance(request);
         return new Response(  200, "OK", "{\"balance\":"+balance+"}");
     }
-
-//    private void sendResponse(DataOutputStream out, int status, String statusMessage, String body, boolean includeContentType) throws IOException {
-//        StringBuilder response = new StringBuilder("HTTP/1.1 " + status + " " + statusMessage + "\r\n");
-//
-//        if (includeContentType) {
-//            response.append("Content-Type: application/json\r\n");
-//            response.append("Content-Length: ").append(body.length()).append("\r\n");
-//
-//            response.append("\r\n");
-//            response.append(body);
-//        }
-//
-//        out.write(response.toString().getBytes());
-//    }
 }
