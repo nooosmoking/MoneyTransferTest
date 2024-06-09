@@ -4,6 +4,7 @@ import com.example.controllers.BankController;
 import com.example.exceptions.*;
 import com.example.models.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,31 +21,46 @@ import java.util.Map;
 import java.util.Scanner;
 
 @Component
+
 public class Server {
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
     private Scanner scanner;
     private ServerSocket server;
-    private final BankController bankController;
     private String url;
+    private final BankController bankController;
+    private final ExceptionHandler exceptionHandler;
 
     @Autowired
-    public Server(BankController bankController) {
+    public Server(BankController bankController, ExceptionHandler exceptionHandler) {
         this.bankController = bankController;
+        this.exceptionHandler = exceptionHandler;
     }
 
-    public void run(String url, String port) {
+    public void run(String url, int port) {
         this.url = url;
         try (Scanner scanner = new Scanner(System.in); ServerSocket serverSocket = new ServerSocket(port)) {
             this.server = serverSocket;
             this.scanner = scanner;
             System.out.println("Starting server. For exiting write \"stop\"");
-
+            startStdin();
             connectClients();
         } catch (IOException e) {
             logger.error("Error while starting server.");
         } finally {
             close();
         }
+    }
+
+    private void startStdin() {
+        Thread stdin = new Thread(() -> {
+            while (true) {
+                String answer = scanner.nextLine();
+                if (answer.equalsIgnoreCase("stop")) {
+                    close();
+                }
+            }
+        });
+        stdin.start();
     }
 
     private void connectClients() {
@@ -78,25 +94,19 @@ public class Server {
                 handleHttpRequest();
             } catch (IOException e) {
                 System.err.println("Error while connecting client.");
-            } finally {
+            } catch (NullPointerException ex){
+                System.err.println("Error while generating response.");
+            }finally {
                 closeClientSocket();
             }
         }
 
-        private void handleHttpRequest() throws IOException {
+        private void handleHttpRequest() throws IOException, NullPointerException {
             try {
                 parseRequest();
                 implementMethod();
-            } catch (InvalidRequestException | NotEnoughMoneyException | IllegalArgumentException ex) {
-                response = new Response(400, "Bad Request", "{\"message\": \"" + ex.getMessage() + "\"}");
-            } catch (ResourceNotFoundException | NoSuchUserException ex) {
-                response = new Response(404, "Not Found", "{\"message\": \"" + ex.getMessage() + "\"}");
-            } catch (MethodNotAllowedException ex) {
-                response = new Response(405, "Method Not Allowed", "{\"message\": \"" + ex.getMessage() + "\"}");
-            } catch (JwtAuthenticationException | AuthenticationException ex) {
-                response = new Response(403, "Forbidden ", "{\"message\": \"" + ex.getMessage() + "\"}");
-            } catch (UserAlreadyExistsException ex) {
-                response = new Response(409, "Conflict", "{\"message\": \"" + ex.getMessage() + "\"}");
+            } catch (Exception ex) {
+                response = exceptionHandler.handleException(ex);
             }
             sendResponse();
         }
@@ -155,7 +165,7 @@ public class Server {
 
         }
 
-        private void sendResponse() throws IOException {
+        private void sendResponse() throws IOException, NullPointerException {
             String responseStr = "HTTP/1.1 " + response.getStatus() + " " + response.getStatusMessage() + "\r\nContent-Type: application/json\r\nContent-Length: " + response.getBody().length() + "\r\n\r\n" + response.getBody();
 
             out.write(responseStr.getBytes());
@@ -172,8 +182,8 @@ public class Server {
     public void close() {
         try {
             server.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (IOException ignored) {
         }
+        System.exit(0);
     }
 }
