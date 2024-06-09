@@ -29,11 +29,13 @@ public class Server {
     private String url;
     private final BankController bankController;
     private final ExceptionHandler exceptionHandler;
+    private final ResponseFactory responseFactory;
 
     @Autowired
-    public Server(BankController bankController, ExceptionHandler exceptionHandler) {
+    public Server(BankController bankController, ExceptionHandler exceptionHandler, ResponseFactory responseFactory) {
         this.bankController = bankController;
         this.exceptionHandler = exceptionHandler;
+        this.responseFactory = responseFactory;
     }
 
     public void run(String url, int port) {
@@ -166,7 +168,8 @@ public class Server {
         }
 
         private void sendResponse() throws IOException, NullPointerException {
-            String responseStr = "HTTP/1.1 " + response.getStatus() + " " + response.getStatusMessage() + "\r\nContent-Type: application/json\r\nContent-Length: " + response.getBody().length() + "\r\n\r\n" + response.getBody();
+
+            String responseStr = responseFactory.createResponseString(response);
 
             out.write(responseStr.getBytes());
         }
