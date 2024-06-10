@@ -20,12 +20,13 @@ import java.util.Scanner;
 
 @Component
 public class Server {
-    private Scanner scanner;
-    private ServerSocket server;
-    private String url;
     private final BankController bankController;
     private final ExceptionHandler exceptionHandler;
     private final ResponseFactory responseFactory;
+    private Scanner scanner;
+    private ServerSocket server;
+    private String url;
+    private boolean isStopped = false;
 
     @Autowired
     public Server(BankController bankController, ExceptionHandler exceptionHandler, ResponseFactory responseFactory) {
@@ -62,12 +63,11 @@ public class Server {
     }
 
     private void connectClients() {
-        while (true) {
+        while (!isStopped) {
             try {
                 Socket clientSocket = server.accept();
                 new ClientThread(clientSocket).start();
-            } catch (IOException e) {
-                System.err.println("Error while connecting client");
+            } catch (IOException ignored) {
             }
         }
     }
@@ -182,6 +182,7 @@ public class Server {
         }
 
         private void closeClientSocket() {
+            isStopped = true;
             if (clientSocket != null) {
                 try {
                     clientSocket.close();

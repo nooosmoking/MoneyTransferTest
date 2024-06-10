@@ -1,7 +1,5 @@
 package com.example.repositories;
 
-import com.example.exceptions.UserAlreadyExistsException;
-
 import java.util.List;
 import java.util.Optional;
 

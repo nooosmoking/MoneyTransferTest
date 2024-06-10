@@ -6,7 +6,9 @@ import com.example.exceptions.NoSuchUserException;
 import com.example.exceptions.NotEnoughMoneyException;
 import com.example.exceptions.UserAlreadyExistsException;
 import com.example.models.*;
-import com.example.services.*;
+import com.example.services.AuthService;
+import com.example.services.BalanceService;
+import com.example.services.TransferService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
@@ -18,8 +20,8 @@ public class BankControllerImpl implements BankController {
     private final AuthService authService;
     private final TransferService transferService;
     private final BalanceService balanceService;
-    private boolean isTransferComplete = true;
     private final AuthAspect authAspect;
+    private boolean isTransferComplete = true;
 
     @Autowired
     public BankControllerImpl(AuthService authService, TransferService transferService, BalanceService balanceService, AuthAspect authAspect) {
@@ -32,14 +34,14 @@ public class BankControllerImpl implements BankController {
     @Override
     public Response signup(SignupRequest request) throws UserAlreadyExistsException, IOException {
         String token = authService.signUp(request);
-        return new Response( 200, "OK", "{\"token\":\"" + token + "\"}");
+        return new Response(200, "OK", "{\"token\":\"" + token + "\"}");
 
     }
 
     @Override
-    public Response signin(SigninRequest request) throws AuthenticationException, NoSuchUserException, IOException{
+    public Response signin(SigninRequest request) throws AuthenticationException, NoSuchUserException, IOException {
         String token = authService.signIn(request);
-        return new Response(  200, "OK", "{\"token\":\"" + token + "\"}");
+        return new Response(200, "OK", "{\"token\":\"" + token + "\"}");
     }
 
     @Override
@@ -48,7 +50,7 @@ public class BankControllerImpl implements BankController {
         isTransferComplete = false;
         try {
             transferService.transfer(request);
-            return new Response( 200, "OK", "");
+            return new Response(200, "OK", "");
         } finally {
             isTransferComplete = true;
         }
@@ -61,6 +63,6 @@ public class BankControllerImpl implements BankController {
             Thread.onSpinWait();
         }
         double balance = balanceService.getBalance(request);
-        return new Response(  200, "OK", "{\"balance\":"+balance+"}");
+        return new Response(200, "OK", "{\"balance\":" + balance + "}");
     }
 }

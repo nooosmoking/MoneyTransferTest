@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class BalanceServiceImpl implements BalanceService{
+public class BalanceServiceImpl implements BalanceService {
     private final UsersRepository usersRepository;
 
     public BalanceServiceImpl(UsersRepository usersRepository) {
@@ -23,8 +23,8 @@ public class BalanceServiceImpl implements BalanceService{
     public double getBalance(Request request) throws NoSuchUserException {
         String login = request.getLogin();
         Optional<User> optionalUser = usersRepository.findByLogin(login);
-        if (optionalUser.isEmpty()){
-            throw new NoSuchUserException("User with login "+login+" not exists.");
+        if (optionalUser.isEmpty()) {
+            throw new NoSuchUserException("User with login " + login + " not exists.");
         }
         double balance = optionalUser.get().getBalance();
         Logger.getInstance().logUserBalance(login, balance);

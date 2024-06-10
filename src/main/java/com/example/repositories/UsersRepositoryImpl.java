@@ -1,11 +1,8 @@
 package com.example.repositories;
 
-import com.example.exceptions.UserAlreadyExistsException;
 import com.example.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -22,21 +19,10 @@ public class UsersRepositoryImpl implements UsersRepository {
     public UsersRepositoryImpl(DataSource dataSource) {
         this.dataSource = dataSource;
     }
-//
+
+    //
     @Override
     public List<User> findAll() {
-//        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-//        String query = "SELECT * FROM users";
-//        RowMapper<User> userRowMapper = (r, i) -> {
-//            User rowUser = new User();
-//            rowUser.setLogin(r.getString("login"));
-//            rowUser.setPassword(r.getString("password"));
-//            rowUser.setIn(null);
-//            rowUser.setOut(null);
-//            rowUser.setActive(false);
-//            return rowUser;
-//        };
-//        return jdbcTemplate.query(query, userRowMapper);
         return null;
     }
 
@@ -48,12 +34,11 @@ public class UsersRepositoryImpl implements UsersRepository {
         return user.stream().findFirst();
     }
 
-    //
     @Override
     public void save(User entity) {
         NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
         String login = entity.getLogin();
-        if(findByLogin(login).isPresent()){
+        if (findByLogin(login).isPresent()) {
             return;
 
         }
@@ -63,7 +48,7 @@ public class UsersRepositoryImpl implements UsersRepository {
                 .addValue("password", entity.getPassword())
                 .addValue("jwttoken", entity.getJwtToken()));
     }
-//
+
     @Override
     public void update(User entity) {
         NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
@@ -79,9 +64,6 @@ public class UsersRepositoryImpl implements UsersRepository {
 
     @Override
     public void delete(User entity) {
-//        NamedParameterJdbcTemplate jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-//        String query = "DELETE FROM users WHERE login = :login;";
-//        jdbcTemplate.update(query, new MapSqlParameterSource().addValue("login", name));
     }
 
     @Override

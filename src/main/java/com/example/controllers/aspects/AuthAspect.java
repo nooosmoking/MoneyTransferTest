@@ -1,12 +1,9 @@
 package com.example.controllers.aspects;
 
-import com.example.exceptions.JwtAuthenticationException;
 import com.example.models.Request;
-import com.example.models.User;
 import com.example.repositories.UsersRepository;
-import com.example.security.jwt.JwtTokenProvider;
+import com.example.security.JwtTokenProvider;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +34,8 @@ public class AuthAspect {
         if (object.isPresent()) {
             Request request = (Request) object.get();
             Map<String, String> headers = request.getHeaders();
-                String login = jwtTokenProvider.doFilter(headers);
-                request.setLogin(login);
+            String login = jwtTokenProvider.doFilter(headers);
+            request.setLogin(login);
         }
     }
 }

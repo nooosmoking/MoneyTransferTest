@@ -7,7 +7,7 @@ import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
 import com.example.models.User;
 import com.example.repositories.UsersRepository;
-import com.example.security.jwt.JwtTokenProvider;
+import com.example.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -51,7 +51,8 @@ public class AuthServiceImpl implements AuthService {
         }
         User user = optionalUser.get();
         if (!passwordEncoder.matches(signinRequest.getPassword(), user.getPassword())) {
-            throw new AuthenticationException("Wrong password");}
+            throw new AuthenticationException("Wrong password");
+        }
         String token = jwtTokenProvider.createToken(login);
         user.setJwtToken(token);
         usersRepository.update(user);

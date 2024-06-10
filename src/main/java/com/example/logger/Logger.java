@@ -8,12 +8,14 @@ import java.time.format.DateTimeFormatter;
 
 public class Logger {
     private static final String LOG_FILE = "log.txt";
-    private BufferedWriter writer;
     private static Logger instance;
+    private BufferedWriter writer;
+    private DateTimeFormatter formatter;
 
     public Logger() {
         try {
             writer = new BufferedWriter(new FileWriter(LOG_FILE, true));
+            formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         } catch (IOException e) {
             System.err.println("Error while creating logger");
         }
@@ -22,7 +24,8 @@ public class Logger {
     public synchronized static Logger getInstance() {
         if (instance == null) {
             instance = new Logger();
-        } return instance;
+        }
+        return instance;
     }
 
     public void logOperation(String userA, String userB, double amount) {
@@ -45,17 +48,18 @@ public class Logger {
         logMessage(message);
     }
 
-    private void logMessage(String message) {
-        String formattedDateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_INSTANT);
+    private synchronized void logMessage(String message) {
+        String formattedDateTime = LocalDateTime.now().format(formatter);
         try {
             writer.write(formattedDateTime + ": " + message + "\n");
+            writer.flush();
         } catch (IOException e) {
             System.err.println("Error while sending logs");
         }
     }
 
-    public void close(){
-        if (writer!=null) {
+    public void close() {
+        if (writer != null) {
             try {
                 writer.close();
             } catch (IOException e) {

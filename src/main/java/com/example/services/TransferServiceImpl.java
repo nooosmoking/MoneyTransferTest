@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class TransferServiceImpl implements TransferService{
+public class TransferServiceImpl implements TransferService {
     private UsersRepository usersRepository;
     private TransferRepository transferRepository;
 
@@ -32,9 +32,9 @@ public class TransferServiceImpl implements TransferService{
 
         double amount = request.getAmount();
         User sender = senderOptional.get();
-        sender.setBalance(sender.getBalance()-amount);
+        sender.setBalance(sender.getBalance() - amount);
         User receiver = receiverOptional.get();
-        receiver.setBalance(receiver.getBalance()+amount);
+        receiver.setBalance(receiver.getBalance() + amount);
 
         Transfer transfer = new Transfer(amount, sender, receiver);
         transferRepository.save(transfer);
@@ -45,18 +45,18 @@ public class TransferServiceImpl implements TransferService{
     }
 
     private void validateTransfer(Optional<User> senderOptional, Optional<User> receiverOptional, TransferRequest request) throws NotEnoughMoneyException, NoSuchUserException {
-        if (senderOptional.isEmpty()){
+        if (senderOptional.isEmpty()) {
             throw new NoSuchUserException("Error while authenticate.!");
-        } else if (receiverOptional.isEmpty()){
-            throw new NoSuchUserException("There is no user with id "+request.getReceiverId());
+        } else if (receiverOptional.isEmpty()) {
+            throw new NoSuchUserException("There is no user with id " + request.getReceiverId());
         }
         User sender = senderOptional.get();
         User receiver = receiverOptional.get();
-        if (receiver.getId() == sender.getId()){
+        if (receiver.getId() == sender.getId()) {
             throw new IllegalArgumentException("Forbidden to send money to yourself.");
         }
-        if (sender.getBalance() < request.getAmount()){
-            throw new NotEnoughMoneyException("User with id " + sender.getId() +" have not enough money to make transaction.");
+        if (sender.getBalance() < request.getAmount()) {
+            throw new NotEnoughMoneyException("User with id " + sender.getId() + " have not enough money to make transaction.");
         }
     }
 }
