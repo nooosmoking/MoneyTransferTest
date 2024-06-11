@@ -21,13 +21,10 @@ public class JwtTokenProvider {
     @Value("${jwt.token.expired}")
     private long validInMilliseconds;
 
-    private UserDetailsService userDetailsService;
-
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    public JwtTokenProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
-        this.userDetailsService = userDetailsService;
+    public JwtTokenProvider(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
