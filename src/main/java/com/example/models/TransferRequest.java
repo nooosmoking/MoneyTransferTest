@@ -1,32 +1,26 @@
 package com.example.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Data
-public class TransferRequest {
-    private double amount;
-    @JsonProperty("senderid")
-    private long senderId;
-    @JsonProperty("receiverid")
-    private long receiverId;
-    @JsonIgnore
-    private String jwtToken;
+import java.util.Map;
 
-    public TransferRequest(String json, String jwtToken) throws JsonProcessingException {
-        ObjectMapper mapper =
-                new ObjectMapper();
+@Data
+@NoArgsConstructor
+public class TransferRequest extends Request {
+    private double amount;
+    @JsonProperty("to")
+    private long receiverId;
+
+    public TransferRequest(String json, Map<String, String> headers) throws JsonProcessingException {
+        super(headers);
+        ObjectMapper mapper = new ObjectMapper();
         TransferRequest transferRequest = mapper.readValue(json, TransferRequest.class);
         this.amount = transferRequest.getAmount();
-        this.senderId = transferRequest.getSenderId();
+        this.setLogin(transferRequest.getLogin());
         this.receiverId = transferRequest.getReceiverId();
-        this.jwtToken = jwtToken;
     }
 }

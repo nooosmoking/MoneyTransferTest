@@ -5,9 +5,12 @@ import com.example.exceptions.UserAlreadyExistsException;
 import com.example.models.SigninRequest;
 import com.example.models.SignupRequest;
 
-public interface AuthService {
-    void signUp(SigninRequest signinRequest) throws UserAlreadyExistsException;
+import javax.security.sasl.AuthenticationException;
 
-    void signIn(SignupRequest signupRequest) throws NoSuchUserException;
+
+public interface AuthService {
+    String signUp(SignupRequest signinRequest) throws UserAlreadyExistsException;
+
+    String signIn(SigninRequest signupRequest) throws NoSuchUserException, AuthenticationException;
 
 }

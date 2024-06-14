@@ -1,7 +1,7 @@
 package com.example.app;
 
-import com.example.server.Server;
 import com.example.config.MoneyTransferApplicationConfig;
+import com.example.server.Server;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -9,11 +9,12 @@ public class Main {
     public static void main(String[] args) {
         ApplicationContext context = new AnnotationConfigApplicationContext(MoneyTransferApplicationConfig.class);
         Server server = context.getBean(Server.class);
-        server.setAddress(getAddress(args));
-        server.run();}
+        String[] address = getAddress(args);
+        server.run(address[0], Integer.parseInt(address[1]));
+    }
 
-    public static String[] getAddress(String[] args) {
-        if (args.length != 2 || !args[0].startsWith("--url=") ||!args[1].startsWith("--port=")) {
+    private static String[] getAddress(String[] args) {
+        if (args.length != 2 || !args[0].startsWith("--url=") || !args[1].startsWith("--port=")) {
             System.err.println("Please write url and port in arguments.");
             System.exit(-1);
         }

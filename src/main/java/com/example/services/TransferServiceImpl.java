@@ -2,6 +2,7 @@ package com.example.services;
 
 import com.example.exceptions.NoSuchUserException;
 import com.example.exceptions.NotEnoughMoneyException;
+import com.example.logger.Logger;
 import com.example.models.Transfer;
 import com.example.models.TransferRequest;
 import com.example.models.User;
@@ -14,7 +15,7 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class TransferServiceImpl implements TransferService{
+public class TransferServiceImpl implements TransferService {
     private UsersRepository usersRepository;
     private TransferRepository transferRepository;
 
@@ -24,35 +25,38 @@ public class TransferServiceImpl implements TransferService{
     }
 
     public synchronized void transfer(TransferRequest request) throws NoSuchUserException, NotEnoughMoneyException, IllegalArgumentException {
-        if (request.getReceiverId() == request.getSenderId()){
-            throw new IllegalArgumentException("Forbidden to send money to yourself.");
-        }
-        Optional<User> senderOptional = usersRepository.findById(request.getSenderId());
+        Optional<User> senderOptional = usersRepository.findByLogin(request.getLogin());
         Optional<User> receiverOptional = usersRepository.findById(request.getReceiverId());
 
         validateTransfer(senderOptional, receiverOptional, request);
 
+        double amount = request.getAmount();
         User sender = senderOptional.get();
-        sender.setBalance(sender.getBalance()-request.getAmount());
+        sender.setBalance(sender.getBalance() - amount);
         User receiver = receiverOptional.get();
-        receiver.setBalance(receiver.getBalance()+request.getAmount());
+        receiver.setBalance(receiver.getBalance() + amount);
 
-        Transfer transfer = new Transfer(request.getAmount(), sender, receiver);
+        Transfer transfer = new Transfer(amount, sender, receiver);
         transferRepository.save(transfer);
 
         usersRepository.updateBalance(sender);
         usersRepository.updateBalance(receiver);
+        Logger.getInstance().logOperation(sender.getLogin(), receiver.getLogin(), amount);
     }
 
     private void validateTransfer(Optional<User> senderOptional, Optional<User> receiverOptional, TransferRequest request) throws NotEnoughMoneyException, NoSuchUserException {
-        if (senderOptional.isEmpty()){
-            throw new NoSuchUserException("There is no user with id "+request.getSenderId());
-        } else if (receiverOptional.isEmpty()){
-            throw new NoSuchUserException("There is no user with id "+request.getReceiverId());
+        if (senderOptional.isEmpty()) {
+            throw new NoSuchUserException("Error while authenticate.!");
+        } else if (receiverOptional.isEmpty()) {
+            throw new NoSuchUserException("There is no user with id " + request.getReceiverId());
         }
         User sender = senderOptional.get();
-        if (sender.getBalance() < request.getAmount()){
-            throw new NotEnoughMoneyException("User with id " + sender.getId() +" have not enough money to make transaction.");
+        User receiver = receiverOptional.get();
+        if (receiver.getId() == sender.getId()) {
+            throw new IllegalArgumentException("Forbidden to send money to yourself.");
+        }
+        if (sender.getBalance() < request.getAmount()) {
+            throw new NotEnoughMoneyException("User with id " + sender.getId() + " have not enough money to make transaction.");
         }
     }
 }
